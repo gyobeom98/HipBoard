@@ -43,7 +43,7 @@ public class SignUpActivity extends BasicActivity {
                     signup();
                     break;
                 case R.id.go_to_loginBtn:
-//                    startNoFinishActivity();
+                    startNoFinishActivity(LoginActivity.class);
                     break;
             }
         }
