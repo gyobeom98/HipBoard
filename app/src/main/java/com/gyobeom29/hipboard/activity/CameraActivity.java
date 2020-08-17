@@ -16,15 +16,20 @@
 
 package com.gyobeom29.hipboard.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 
 import com.gyobeom29.hipboard.R;
@@ -85,6 +90,23 @@ public class CameraActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        if (ContextCompat.checkSelfPermission(
+                getApplicationContext(), Manifest.permission.CAMERA) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // You can use the API that requires the permission.
+            if(ActivityCompat.shouldShowRequestPermissionRationale(CameraActivity.this,Manifest.permission.CAMERA)){
+                ActivityCompat.requestPermissions(CameraActivity.this,new String[]{Manifest.permission.CAMERA},1);
+
+            }else{
+                ActivityCompat.requestPermissions(CameraActivity.this,new String[]{Manifest.permission.CAMERA},1);
+                startingToast("권한을 허용 해주세요");
+            }
+        }else {
+            startActi(MainActivity.class);
+        }
+
+
         if (null == savedInstanceState) {
             Camera2BasicFragment camera2BasicFragment = new Camera2BasicFragment();
             camera2BasicFragment.setOnImageAvailableListener(mOnImageAvailableListener);
@@ -92,6 +114,17 @@ public class CameraActivity extends BasicActivity {
                     .replace(R.id.container, camera2BasicFragment)
                     .commit();
         }
+    }
+
+
+    private void startingToast(String msg){
+        Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT).show();
+    }
+
+    private void startActi(Class c){
+        Intent intent = new Intent(this,c);
+        startActivity(intent);
+        finish();
     }
 
 }

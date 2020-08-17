@@ -1,12 +1,18 @@
 package com.gyobeom29.hipboard.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.View;
+import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,6 +31,22 @@ public class GalleryActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
+
+        if (ContextCompat.checkSelfPermission(
+                getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // You can use the API that requires the permission.
+            if(ActivityCompat.shouldShowRequestPermissionRationale(GalleryActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)){
+                ActivityCompat.requestPermissions(GalleryActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+
+            }else{
+                ActivityCompat.requestPermissions(GalleryActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+                startingToast("권한을 허용 해주세요");
+            }
+        }else {
+            startActi(MainActivity.class);
+        }
+
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
         recyclerView.setHasFixedSize(true);
@@ -64,6 +86,15 @@ public class GalleryActivity extends BasicActivity {
             listOfAllImages.add(pathofImage);
         }
         return listOfAllImages;
+    }
+
+    public void startingToast(String msg){
+        Toast.makeText(getApplicationContext(),msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void startActi(Class c){
+        Intent intent = new Intent(GalleryActivity.this,c);
+        startActivity(intent);
     }
 
 }

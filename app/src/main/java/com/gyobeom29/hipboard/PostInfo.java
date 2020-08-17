@@ -4,14 +4,14 @@ package com.gyobeom29.hipboard;
 import java.util.Date;
 import java.util.List;
 
-public class WriteInfo {
+public class PostInfo {
 
     private String title;
     private List<String> contents;
     private String publisher;
     private Date createAt;
 
-    public WriteInfo(String title, List<String> contents, String publisher, Date createAt) {
+    public PostInfo(String title, List<String> contents, String publisher, Date createAt) {
         this.title = title;
         this.contents = contents;
         this.publisher = publisher;

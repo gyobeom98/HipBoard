@@ -28,8 +28,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
-import com.gyobeom29.hipboard.WriteInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -148,9 +148,9 @@ public class WritePostActivity extends BasicActivity {
                                             for (String str : contentList) {
                                                 writeLog("contentList : " + str);
                                             }
-                                            WriteInfo writeInfo = new WriteInfo(title, contentList, user.getUid(), new Date());
-                                            writeLog(writeInfo.toString());
-                                            storeUpload(documentReference, writeInfo);
+                                            PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), new Date());
+                                            writeLog(postInfo.toString());
+                                            storeUpload(documentReference, postInfo);
                                         }
                                     }
                                 });
@@ -165,18 +165,18 @@ public class WritePostActivity extends BasicActivity {
                 }
             }
             if(pathList.size() == 0){
-                WriteInfo writeInfo = new WriteInfo(title, contentList, user.getUid(), new Date());
-                writeLog(writeInfo.toString());
-                storeUpload(documentReference, writeInfo);
+                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), new Date());
+                writeLog(postInfo.toString());
+                storeUpload(documentReference, postInfo);
             }
         } else {
             startingToast("회원 정보를 입력 해주세요");
         }
     }
 
-    private void storeUpload(DocumentReference documentReference, WriteInfo writeInfo) {
+    private void storeUpload(DocumentReference documentReference, PostInfo postInfo) {
 
-        documentReference.set(writeInfo)
+        documentReference.set(postInfo)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {

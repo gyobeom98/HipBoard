@@ -2,6 +2,9 @@ package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -19,11 +22,20 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
+import com.gyobeom29.hipboard.adapter.MainPostAdapter;
+
+import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends BasicActivity {
 
     private static final String TAG = "MainActivity";
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter mAdapter;
 
     FirebaseAuth mAuth;
     @Override
@@ -68,6 +80,35 @@ public class MainActivity extends BasicActivity {
                     }
                 }
             });
+            final ArrayList<PostInfo> postList = new ArrayList<>();
+            db.collection("posts")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                    String title = document.getData().get("title").toString();
+                                    ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
+                                    String publisher = document.getData().get("publisher").toString();
+                                    Date createAt = new Date(document.getDate("createAt").getTime());
+                                    PostInfo info = new PostInfo(title,contents,publisher,createAt);
+                                    postList.add(info);
+                                    writeLog(info.toString());
+                                }
+                                recyclerView = findViewById(R.id.mainRecyclerView);
+                                recyclerView.setHasFixedSize(true);
+                                recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this,RecyclerView.VERTICAL,false));
+
+                                mAdapter = new MainPostAdapter(postList,MainActivity.this);
+                                recyclerView.setAdapter(mAdapter);
+                            } else {
+                                Log.d(TAG, "Error getting documents: ", task.getException());
+                            }
+                        }
+                    });
+
         }
 
         findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
