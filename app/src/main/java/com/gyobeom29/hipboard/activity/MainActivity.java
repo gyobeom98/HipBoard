@@ -1,15 +1,10 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.Activity;
-import android.app.Dialog;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -42,6 +37,18 @@ public class MainActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
+        findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
+        findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -103,6 +110,7 @@ public class MainActivity extends BasicActivity {
 
                                 mAdapter = new MainPostAdapter(postList,MainActivity.this);
                                 recyclerView.setAdapter(mAdapter);
+                                mAdapter.notifyDataSetChanged();
                             } else {
                                 Log.d(TAG, "Error getting documents: ", task.getException());
                             }
@@ -111,9 +119,6 @@ public class MainActivity extends BasicActivity {
 
         }
 
-        findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
-        findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
-        findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {

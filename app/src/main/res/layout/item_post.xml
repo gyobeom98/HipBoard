@@ -2,17 +2,39 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/galleryCardView"
+    android:id="@+id/post_item_cardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="5dp"
     app:cardCornerRadius="10dp">
 
-    <TextView
-        android:textStyle="bold"
-        android:textSize="24sp"
-        android:id="@+id/item_post_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-         />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/item_post_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/post_contents_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/post_date_textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:textSize="18sp"
+                android:text="TextView" />
+        </LinearLayout>
+    </LinearLayout>
+
 </androidx.cardview.widget.CardView>

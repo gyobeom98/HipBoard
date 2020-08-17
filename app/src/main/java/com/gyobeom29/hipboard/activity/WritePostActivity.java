@@ -46,7 +46,7 @@ public class WritePostActivity extends BasicActivity {
     private LinearLayout layout;
     int pathCount;
     int successCount;
-    RelativeLayout cardLayout;
+    private RelativeLayout cardLayout;
     private ImageView selectImageView;
     private RelativeLayout loaderLayout;
 
@@ -75,7 +75,6 @@ public class WritePostActivity extends BasicActivity {
             switch (v.getId()) {
                 case R.id.checkBtn:
                     storageUpload();
-                    finish();
                     break;
                 case R.id.writePostImagBtn:
                     startActiNoFinish(GalleryActivity.class, "image",101);
@@ -120,7 +119,9 @@ public class WritePostActivity extends BasicActivity {
                     }
                 } else {
                     contentList.add(pathList.get(pathCount));
-                    final StorageReference mountainImagesRef = storageRef.child("posts/" + documentReference.getId() + "/" + pathCount + ".jpg");
+                    String[] pathArray =  pathList.get(pathCount).split("\\.");
+                    writeLog("pathArray : " +pathArray[pathArray.length-1].trim());
+                    final StorageReference mountainImagesRef = storageRef.child("posts/" + documentReference.getId() + "/" + pathCount + "." + pathArray[pathArray.length-1].trim());
                     try {
                         InputStream stream = new FileInputStream(new File(pathList.get(pathCount)));
                         StorageMetadata metadata = new StorageMetadata.Builder().setCustomMetadata("index", "" + (contentList.size() - 1)).build();
@@ -154,7 +155,6 @@ public class WritePostActivity extends BasicActivity {
                                         }
                                     }
                                 });
-                             loaderLayout.setVisibility(View.GONE);
                             }
                         });
 
@@ -181,12 +181,15 @@ public class WritePostActivity extends BasicActivity {
                     @Override
                     public void onSuccess(Void aVoid) {
                         Log.d(TAG, "DocumentSnapshot successfully written!");
+                        loaderLayout.setVisibility(View.GONE);
+                        finish();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "Error writing document", e);
+                        loaderLayout.setVisibility(View.GONE);
                     }
                 });
 
@@ -248,7 +251,7 @@ public class WritePostActivity extends BasicActivity {
     }
 
     private void startActiNoFinish(Class c, String media,int requestCode) {
-        Intent intent = new Intent(this, c);
+        Intent intent = new Intent(WritePostActivity.this, c);
         intent.putExtra("media", media);
         startActivityForResult(intent, requestCode);
     }

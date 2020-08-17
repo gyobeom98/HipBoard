@@ -31,6 +31,12 @@ public class GalleryActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
+        recyclerView = findViewById(R.id.recyclerView);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         if (ContextCompat.checkSelfPermission(
                 getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) !=
@@ -43,11 +49,7 @@ public class GalleryActivity extends BasicActivity {
                 ActivityCompat.requestPermissions(GalleryActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
                 startingToast("권한을 허용 해주세요");
             }
-        }else {
-            startActi(MainActivity.class);
         }
-
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
         recyclerView.setHasFixedSize(true);
 
@@ -58,8 +60,8 @@ public class GalleryActivity extends BasicActivity {
 
         mAdapter = new GalleryAdapter(getImagesPath(this),this);
         recyclerView.setAdapter(mAdapter);
-    }
 
+    }
 
     public  ArrayList<String> getImagesPath(Activity activity){
         Uri uri= null;

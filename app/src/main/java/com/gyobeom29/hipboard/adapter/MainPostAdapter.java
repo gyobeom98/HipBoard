@@ -16,9 +16,11 @@ import com.bumptech.glide.Glide;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainPostAdapter extends RecyclerView.Adapter<MainPostAdapter.GalleryViewHolder> {
  private static final String TAG = "MainPostAdapter";
@@ -71,8 +73,11 @@ public static class GalleryViewHolder extends RecyclerView.ViewHolder {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         CardView cardView = holder.cardView;
-        TextView textView = cardView.findViewById(R.id.item_post_textView);
-        textView.setText(mDataset.get(position).getTitle());
+        TextView titleTextView = cardView.findViewById(R.id.item_post_textView);
+        titleTextView.setText(mDataset.get(position).getTitle());
+
+        TextView createAtTextview = cardView.findViewById(R.id.post_date_textView);
+        createAtTextview.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(mDataset.get(position).getCreateAt()));
 
         Log.i(TAG,mDataset.get(position).toString());
 
