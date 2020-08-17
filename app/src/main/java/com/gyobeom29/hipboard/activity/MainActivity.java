@@ -36,6 +36,7 @@ public class MainActivity extends BasicActivity {
         if(user == null){
             findViewById(R.id.logoutButton).setVisibility(View.GONE);
             findViewById(R.id.member_in_it_btn).setVisibility(View.GONE);
+            startActiNoFinish(SignUpActivity.class);
         }else{
             findViewById(R.id.logoutButton).setVisibility(View.VISIBLE);
             findViewById(R.id.member_in_it_btn).setVisibility(View.VISIBLE);
