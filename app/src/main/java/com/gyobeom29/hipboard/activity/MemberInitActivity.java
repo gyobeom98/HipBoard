@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -52,9 +53,13 @@ public class MemberInitActivity extends BasicActivity {
 
     private ImageView profileImageView;
 
+    private RelativeLayout loaderLayout;
+
     private  String profilePath;
 
     private FirebaseUser user;
+
+    CardView cardView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +72,12 @@ public class MemberInitActivity extends BasicActivity {
         findViewById(R.id.addInfoBtn).setOnClickListener(onClickListener);
 
         profileImageView = findViewById(R.id.profileImageView);
-
+        loaderLayout = findViewById(R.id.loaderLayout);
         profileImageView.setOnClickListener(onClickListener);
 
         findViewById(R.id.galleryBtn).setOnClickListener(onClickListener);
         findViewById(R.id.pictureBtn).setOnClickListener(onClickListener);
+        cardView = findViewById(R.id.btnsCardView);
 
     }
 
@@ -87,11 +93,10 @@ public class MemberInitActivity extends BasicActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.addInfoBtn :
-                    profileUpdate();
+                    storageUploader();
                     break;
 
                 case R.id.profileImageView :
-                    CardView cardView = findViewById(R.id.btnsCardView);
                     if (cardView.getVisibility() == View.VISIBLE){
                         cardView.setVisibility(View.GONE);
                     }else{
@@ -111,7 +116,8 @@ public class MemberInitActivity extends BasicActivity {
                             startingToast("권한을 허용 해주세요");
                         }
                     }else {
-//                        startActitivyNoFinish(GalleryActivity.class);
+                        startActitivyNoFinish(GalleryActivity.class);
+                        cardView.setVisibility(View.GONE);
                     }
                     break;
                 case R.id.pictureBtn :
@@ -128,6 +134,7 @@ public class MemberInitActivity extends BasicActivity {
                         }
                     }else {
                         startActitivyNoFinish(CameraActivity.class);
+                        cardView.setVisibility(View.GONE);
                     }
 
                     break;
@@ -151,7 +158,7 @@ public class MemberInitActivity extends BasicActivity {
 
 
 
-    private void profileUpdate() {
+    private void storageUploader() {
 
         final String name = ((EditText) findViewById(R.id.member_nameEditText)).getText().toString();
         final String phone = ((EditText) findViewById(R.id.member_phoneEditText)).getText().toString();
@@ -159,6 +166,7 @@ public class MemberInitActivity extends BasicActivity {
         final String address = ((EditText) findViewById(R.id.member_addressEditText)).getText().toString();
 
         if (name.length() > 0 && phone.length()>0 && birth.length()>0 && address.length()>0) {
+            loaderLayout.setVisibility(View.VISIBLE);
             final FirebaseFirestore db = FirebaseFirestore.getInstance();
             user = FirebaseAuth.getInstance().getCurrentUser();
             FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -170,7 +178,7 @@ public class MemberInitActivity extends BasicActivity {
             final StorageReference mountainImagesRef = storageRef.child("users/"+user.getUid()+"/profileImages.jpg");
             if(profilePath==null){
                 MemberInfo memberInfo = new MemberInfo(name, phone, birth, address);
-                uploader(memberInfo);
+                storeUploader(memberInfo);
             }else {
                 try {
                     InputStream stream = new FileInputStream(new File(profilePath));
@@ -190,11 +198,12 @@ public class MemberInitActivity extends BasicActivity {
                     }).addOnCompleteListener(new OnCompleteListener<Uri>() {
                         @Override
                         public void onComplete(@NonNull Task<Uri> task) {
+                            loaderLayout.setVisibility(View.GONE);
                             if (task.isSuccessful()) {
                                 Uri downloadUri = task.getResult();
                                 Log.i(TAG, "이미지 업로드 성공 URI:" + downloadUri);
                                 MemberInfo memberInfo = new MemberInfo(name, phone, birth, address, downloadUri.toString());
-                                uploader(memberInfo);
+                                storeUploader(memberInfo);
 
                             } else {
                                 // Handle failures
@@ -215,7 +224,7 @@ public class MemberInitActivity extends BasicActivity {
         }
     }
 
-    private void uploader(MemberInfo memberInfo){
+    private void storeUploader(MemberInfo memberInfo){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference reference = db.collection("users").document(user.getUid());
         reference.set(memberInfo).addOnSuccessListener(new OnSuccessListener<Void>() {

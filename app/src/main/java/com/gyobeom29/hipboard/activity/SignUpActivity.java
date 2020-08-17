@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -23,6 +24,8 @@ public class SignUpActivity extends BasicActivity {
 
     FirebaseAuth mAuth;
 
+    RelativeLayout loaderLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +35,7 @@ public class SignUpActivity extends BasicActivity {
 
         findViewById(R.id.signUpButton).setOnClickListener(onClickListener);
         findViewById(R.id.go_to_loginBtn).setOnClickListener(onClickListener);
+        loaderLayout = findViewById(R.id.loaderLayout);
     }
 
 
@@ -56,10 +60,12 @@ public class SignUpActivity extends BasicActivity {
         String passwordCheck = ((EditText) findViewById(R.id.passwordCheckEditText)).getText().toString();
         if (email.length() > 0 && password.length() > 0 && passwordCheck.length() > 0) {
             if (password.equals(passwordCheck)) {
+                loaderLayout.setVisibility(View.VISIBLE);
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
+                                loaderLayout.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     startingToast("회원가입을 성공 했습니다.");

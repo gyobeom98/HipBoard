@@ -72,6 +72,7 @@ public class MainActivity extends BasicActivity {
 
         findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
         findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
+        findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -80,6 +81,7 @@ public class MainActivity extends BasicActivity {
             switch (v.getId()){
                 case R.id.logoutButton : mAuth.signOut(); startActiNoFinish(SignUpActivity.class); break;
                 case R.id.member_in_it_btn : startActiNoFinish(MemberInitActivity.class); break;
+                case R.id.mainFloatBtn : startActiNoFinish(WritePostActivity.class); break;
             }
         }
     };

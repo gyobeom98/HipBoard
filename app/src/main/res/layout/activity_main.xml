@@ -22,4 +22,17 @@
         android:layout_marginLeft="39dp" />
 
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/mainFloatBtn"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="51dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="47dp"
+        android:clickable="true"
+        app:srcCompat="@drawable/ic_baseline_add_24" />
+
+
 </RelativeLayout>
