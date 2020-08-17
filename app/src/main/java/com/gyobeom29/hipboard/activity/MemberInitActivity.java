@@ -1,6 +1,5 @@
 package com.gyobeom29.hipboard.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
@@ -98,7 +97,6 @@ public class MemberInitActivity extends BasicActivity {
                     }else{
                         cardView.setVisibility(View.VISIBLE);
                     }
-//                    startActitivyNoFinish(CameraActivity.class);
                     break;
                 case R.id.galleryBtn :
                     if (ContextCompat.checkSelfPermission(
@@ -117,7 +115,21 @@ public class MemberInitActivity extends BasicActivity {
                     }
                     break;
                 case R.id.pictureBtn :
-//                    startActitivyNoFinish(CameraActivity.class);
+                    if (ContextCompat.checkSelfPermission(
+                            getApplicationContext(), Manifest.permission.CAMERA) !=
+                            PackageManager.PERMISSION_GRANTED) {
+                        // You can use the API that requires the permission.
+                        if(ActivityCompat.shouldShowRequestPermissionRationale(MemberInitActivity.this,Manifest.permission.CAMERA)){
+                            ActivityCompat.requestPermissions(MemberInitActivity.this,new String[]{Manifest.permission.CAMERA},1);
+
+                        }else{
+                            ActivityCompat.requestPermissions(MemberInitActivity.this,new String[]{Manifest.permission.CAMERA},1);
+                            startingToast("권한을 허용 해주세요");
+                        }
+                    }else {
+                        startActitivyNoFinish(CameraActivity.class);
+                    }
+
                     break;
             }
         }

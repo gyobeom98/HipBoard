@@ -54,12 +54,12 @@ public class MainActivity extends BasicActivity {
                             if (document.exists()) {
                                 Log.d(TAG, "DocumentSnapshot data: " + document.getData());
                                 if(document.getData() == null) {
-//                                    startActi(MemberInitActivity.class);
+                                    startActi(MemberInitActivity.class);
                                 }else{
                                     Log.e("documentData", "data" + document.getData());
                                 }
                             } else {
-//                                startActi(MemberInitActivity.class);
+                                startActi(MemberInitActivity.class);
                                 Log.d(TAG, "No such document");
                             }
                         }
@@ -78,7 +78,8 @@ public class MainActivity extends BasicActivity {
         @Override
         public void onClick(View v) {
             switch (v.getId()){
-                case R.id.logoutButton : mAuth.signOut(); break;
+                case R.id.logoutButton : mAuth.signOut(); startActiNoFinish(SignUpActivity.class); break;
+                case R.id.member_in_it_btn : startActiNoFinish(MemberInitActivity.class); break;
             }
         }
     };
@@ -97,6 +98,10 @@ public class MainActivity extends BasicActivity {
 
     private void startingToast(String msg){
         Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT).show();
+    }
+
+    private void writeLog(String msg){
+        Log.i(TAG,msg);
     }
 
 }
