@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "855247169605",
+    "firebase_url": "https://hipboard-8e3fc.firebaseio.com",
+    "project_id": "hipboard-8e3fc",
+    "storage_bucket": "hipboard-8e3fc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855247169605:android:f9887abf3805ec0a349b2c",
+        "android_client_info": {
+          "package_name": "com.gyobeom29.hipboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "855247169605-e7mggm2va4abimlgsh3vda7gqd3j236s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZGe-OKlTxHjmNP5iEMap5_yX7vlNUZKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "855247169605-e7mggm2va4abimlgsh3vda7gqd3j236s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
