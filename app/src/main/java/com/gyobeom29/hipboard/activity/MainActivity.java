@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.gyobeom29.hipboard.PostInfo;
@@ -30,7 +31,10 @@ public class MainActivity extends BasicActivity {
 
     private static final String TAG = "MainActivity";
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.Adapter myAdpater;
+    FirebaseUser user;
+    FirebaseFirestore firestore;
+
 
     FirebaseAuth mAuth;
     @Override
@@ -39,18 +43,20 @@ public class MainActivity extends BasicActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
+         user = FirebaseAuth.getInstance().getCurrentUser();
+        recyclerView = findViewById(R.id.mainRecyclerView);
         findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
         findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
         findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this,RecyclerView.VERTICAL,false));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if(user == null){
             findViewById(R.id.logoutButton).setVisibility(View.GONE);
@@ -60,8 +66,8 @@ public class MainActivity extends BasicActivity {
             findViewById(R.id.logoutButton).setVisibility(View.VISIBLE);
             findViewById(R.id.member_in_it_btn).setVisibility(View.VISIBLE);
             Log.e("UId" , user.getUid());
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            DocumentReference docRef = db.collection("users").document(user.getUid());
+            firestore = FirebaseFirestore.getInstance();
+            DocumentReference docRef = firestore.collection("users").document(user.getUid());
             docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -88,29 +94,30 @@ public class MainActivity extends BasicActivity {
                 }
             });
             final ArrayList<PostInfo> postList = new ArrayList<>();
-            db.collection("posts")
-                    .get()
+            firestore.collection("posts").orderBy("createAt", Query.Direction.DESCENDING).get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
                                     Log.d(TAG, document.getId() + " => " + document.getData());
+                                    Log.i("documentId",document.getId());
+                                    String documentId = document.getId();
                                     String title = document.getData().get("title").toString();
                                     ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
                                     String publisher = document.getData().get("publisher").toString();
                                     Date createAt = new Date(document.getDate("createAt").getTime());
-                                    PostInfo info = new PostInfo(title,contents,publisher,createAt);
+                                    long views = (Long) document.getData().get("views");
+                                    long likeCnt = (long) document.getData().get("likeCount");
+                                    PostInfo info = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
+                                    info.setDocumentId(documentId);
                                     postList.add(info);
                                     writeLog(info.toString());
                                 }
-                                recyclerView = findViewById(R.id.mainRecyclerView);
-                                recyclerView.setHasFixedSize(true);
-                                recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this,RecyclerView.VERTICAL,false));
 
-                                mAdapter = new MainPostAdapter(postList,MainActivity.this);
-                                recyclerView.setAdapter(mAdapter);
-                                mAdapter.notifyDataSetChanged();
+                                myAdpater = new MainPostAdapter(postList,MainActivity.this);
+                                recyclerView.setAdapter(myAdpater);
+                                myAdpater.notifyDataSetChanged();
                             } else {
                                 Log.d(TAG, "Error getting documents: ", task.getException());
                             }

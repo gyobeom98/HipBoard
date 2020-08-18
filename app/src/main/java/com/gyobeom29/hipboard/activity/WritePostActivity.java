@@ -149,7 +149,7 @@ public class WritePostActivity extends BasicActivity {
                                             for (String str : contentList) {
                                                 writeLog("contentList : " + str);
                                             }
-                                            PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), new Date());
+                                            PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), 0,0,new Date());
                                             writeLog(postInfo.toString());
                                             storeUpload(documentReference, postInfo);
                                         }
@@ -165,7 +165,7 @@ public class WritePostActivity extends BasicActivity {
                 }
             }
             if(pathList.size() == 0){
-                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), new Date());
+                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(),0,0,new Date());
                 writeLog(postInfo.toString());
                 storeUpload(documentReference, postInfo);
             }
@@ -174,7 +174,7 @@ public class WritePostActivity extends BasicActivity {
         }
     }
 
-    private void storeUpload(DocumentReference documentReference, PostInfo postInfo) {
+    private void storeUpload(final DocumentReference documentReference, PostInfo postInfo) {
 
         documentReference.set(postInfo)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
