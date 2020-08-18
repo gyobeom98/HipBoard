@@ -1,4 +1,8 @@
 package com.gyobeom29.hipboard.listener;
 
-public class OnPostListener {
+public interface OnPostListener {
+
+    void onDelete();
+    void onModify();
+
 }

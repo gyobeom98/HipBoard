@@ -1,10 +1,13 @@
 package com.gyobeom29.hipboard;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Date;
 import java.util.List;
 
-public class PostInfo {
+public class PostInfo implements Parcelable {
 
     private String documentId;
     private String title;
@@ -22,6 +25,42 @@ public class PostInfo {
         this.likeCount = likeCount;
         this.createAt = createAt;
     }
+
+    protected PostInfo(Parcel in) {
+        documentId = in.readString();
+        title = in.readString();
+        contents = in.createStringArrayList();
+        publisher = in.readString();
+        views = in.readLong();
+        likeCount = in.readLong();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(documentId);
+        dest.writeString(title);
+        dest.writeStringList(contents);
+        dest.writeString(publisher);
+        dest.writeLong(views);
+        dest.writeLong(likeCount);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<PostInfo> CREATOR = new Creator<PostInfo>() {
+        @Override
+        public PostInfo createFromParcel(Parcel in) {
+            return new PostInfo(in);
+        }
+
+        @Override
+        public PostInfo[] newArray(int size) {
+            return new PostInfo[size];
+        }
+    };
 
     public String getTitle() {
         return title;

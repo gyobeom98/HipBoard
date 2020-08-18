@@ -9,8 +9,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -43,13 +45,16 @@ public class WritePostActivity extends BasicActivity {
     private final String TAG = "WritePostActivity";
     private FirebaseUser user;
     private ArrayList<String> pathList = new ArrayList<>();
+    private ArrayList<String> updatePathList = new ArrayList<>();
     private LinearLayout layout;
     int pathCount;
     int successCount;
     private RelativeLayout cardLayout;
     private ImageView selectImageView;
     private RelativeLayout loaderLayout;
-
+    PostInfo postInfo;
+    DocumentReference documentReference;
+    private int imageNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +71,13 @@ public class WritePostActivity extends BasicActivity {
         cardLayout = findViewById(R.id.cardLayout);
         cardLayout.setOnClickListener(onClickListener);
         user = FirebaseAuth.getInstance().getCurrentUser();
+        postInfo = getIntent().getParcelableExtra("postInfo");
+        if(postInfo != null){
+            updateInit();
+            writeLog(postInfo.toString());
+             postInfo.setCreateAt(new Date(getIntent().getLongExtra("createAt",0)));
+        }
+
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -101,16 +113,26 @@ public class WritePostActivity extends BasicActivity {
     private void storageUpload() {
 
         final String title = ((EditText) findViewById(R.id.writePostTitleEd)).getText().toString();
-
         if (title.trim().length() > 0) {
             loaderLayout.setVisibility(View.VISIBLE);
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference();
             FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-            final DocumentReference documentReference = firebaseFirestore.collection("posts").document();
+            documentReference = firebaseFirestore.collection("posts").document();
+            if(postInfo!=null) documentReference = firebaseFirestore.collection("posts").document(postInfo.getDocumentId());
             final ArrayList<String> contentList = new ArrayList<>();
-
-            for (int i = 0; i < layout.getChildCount(); i++) {
+            Date createAt = new Date();
+            long views = 0;
+            long likeCount = 0;
+            pathCount = 0;
+            int childCount = layout.getChildCount();
+            if(postInfo!=null){
+                childCount = childCount-1;
+                createAt = postInfo.getCreateAt();
+                views = postInfo.getViews();
+                likeCount = postInfo.getLikeCount();
+            }
+            for (int i = 0; i < childCount; i++) {
                 View view = layout.getChildAt(i);
                 if (view instanceof EditText) {
                     String text = ((EditText) view).getText().toString();
@@ -118,54 +140,115 @@ public class WritePostActivity extends BasicActivity {
                         contentList.add(text);
                     }
                 } else {
+                    writeLog("여기 왔음");
+                    writeLog("pathListSize : " + pathList.size());
+                    writeLog("pathCount : " + pathCount);
+                    writeLog("pathList.get(pathCount) : " + pathList.get(pathCount));
                     contentList.add(pathList.get(pathCount));
+                    for (String str: contentList) {
+                        writeLog("str : " + str);
+                    }
                     String[] pathArray =  pathList.get(pathCount).split("\\.");
                     writeLog("pathArray : " +pathArray[pathArray.length-1].trim());
-                    final StorageReference mountainImagesRef = storageRef.child("posts/" + documentReference.getId() + "/" + pathCount + "." + pathArray[pathArray.length-1].trim());
-                    try {
-                        InputStream stream = new FileInputStream(new File(pathList.get(pathCount)));
-                        StorageMetadata metadata = new StorageMetadata.Builder().setCustomMetadata("index", "" + (contentList.size() - 1)).build();
-                        UploadTask uploadTask = mountainImagesRef.putStream(stream, metadata);
-                        uploadTask.addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                loaderLayout.setVisibility(View.GONE);
-                                // Handle unsuccessful uploads
-                            }
-                        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                                // ...
-                                final int index = Integer.parseInt(taskSnapshot.getMetadata().getCustomMetadata("index"));
-                                mountainImagesRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                    @Override
-                                    public void onSuccess(Uri uri) {
-                                        writeLog("uri : " + uri);
-                                        contentList.set(index, uri.toString());
-                                        successCount++;
-                                        if (pathCount == successCount) {
-                                            // 완료
-                                            for (String str : contentList) {
-                                                writeLog("contentList : " + str);
+                    String type = pathArray[pathArray.length-1];
+                    if(postInfo!=null){
+                        if(type.indexOf('?') >0)
+                        type = type.substring(0,type.indexOf("?"));
+                    }
+                    String documentId = documentReference.getId();
+                    if(postInfo != null)
+                        documentId = postInfo.getDocumentId();
+                    writeLog("type : " + type);
+                    writeLog("documentId : " + documentId);
+                    writeLog("path : " +"posts/" + documentId + "/" + pathCount + "." + type);
+                    writeLog("pathList : " + pathList.get(pathCount));
+                    writeLog("pathCount : " + pathCount);
+                    writeLog("contentList : " + contentList.get(pathCount));
+                    boolean isEquals = false;
+                    for (int j=0; j < updatePathList.size();j++){
+                        if(updatePathList.get(j).equals(pathList.get(pathCount))){
+                            isEquals = true;
+                           break;
+                        }
+                    }
+                    if(postInfo==null) isEquals = true;
+                    writeLog("postInfo : " + postInfo);
+                    final StorageReference mountainImagesRef = storageRef.child("posts/" + documentId + "/" + pathCount + "." + type);
+                    if(!isEquals) {
+                        try {
+                            writeLog("path : " +"posts/" + documentId + "/" + pathCount + "." + type);
+                            writeLog("이스 이퀄스 넘어감");
+                            InputStream stream = new FileInputStream(new File(pathList.get(pathCount)));
+                            StorageMetadata metadata = new StorageMetadata.Builder().setCustomMetadata("index", "" + (contentList.size() - 1)).build();
+                            UploadTask uploadTask = mountainImagesRef.putStream(stream, metadata);
+                            uploadTask.addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    loaderLayout.setVisibility(View.GONE);
+                                    // Handle unsuccessful uploads
+                                    exception.printStackTrace();
+                                    writeLog("putStream Failed");
+                                }
+                            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                                    // ...
+                                    writeLog("putStream Success");
+                                    final int index = Integer.parseInt(taskSnapshot.getMetadata().getCustomMetadata("index"));
+                                    mountainImagesRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                        @Override
+                                        public void onSuccess(Uri uri) {
+                                            writeLog("uri : " + uri);
+                                            writeLog("index : " + index);
+                                            contentList.set(index, uri.toString());
+                                            successCount++;
+                                            if (pathCount == successCount) {
+                                                // 완료
+                                                for (String str : contentList) {
+                                                    writeLog("contentList : " + str);
+                                                }
+                                                long vis = 0;
+                                                long lcnt = 0;
+                                                Date createDate = new Date();
+                                                if(postInfo !=null){
+                                                    vis = postInfo.getViews();
+                                                    lcnt = postInfo.getLikeCount();
+                                                    createDate = postInfo.getCreateAt();
+                                                }
+                                                for (String strs : contentList) {
+                                                    writeLog("strs : " + strs);
+                                                }
+                                                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), vis, lcnt, createDate);
+                                                writeLog(postInfo.toString());
+                                                storeUpload(documentReference, postInfo);
                                             }
-                                            PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), 0,0,new Date());
-                                            writeLog(postInfo.toString());
-                                            storeUpload(documentReference, postInfo);
                                         }
-                                    }
-                                });
-                            }
-                        });
+                                    });
+                                }
+                            });
 
-                    } catch (IOException e) {
-                        Log.e("로그", "에러 : " + e.toString());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Log.e("로그", "에러 : " + e.toString());
+                            loaderLayout.setVisibility(View.GONE);
+                        }
+                    }else{
+                        for (String strs : contentList) {
+                            writeLog("strs : " + strs);
+                        }
+                        PostInfo postInfo = new PostInfo(title, contentList, user.getUid(), views, likeCount, createAt);
+                        writeLog(postInfo.toString());
+                        storeUpload(documentReference, postInfo);
                     }
                     pathCount++;
                 }
             }
             if(pathList.size() == 0){
-                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(),0,0,new Date());
+                for (String strs : contentList) {
+                    writeLog("strs : " + strs);
+                }
+                PostInfo postInfo = new PostInfo(title, contentList, user.getUid(),views,likeCount,createAt);
                 writeLog(postInfo.toString());
                 storeUpload(documentReference, postInfo);
             }
@@ -182,7 +265,7 @@ public class WritePostActivity extends BasicActivity {
                     public void onSuccess(Void aVoid) {
                         Log.d(TAG, "DocumentSnapshot successfully written!");
                         loaderLayout.setVisibility(View.GONE);
-                        finish();
+//                        finish();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -213,7 +296,7 @@ public class WritePostActivity extends BasicActivity {
             case 101: {
                 if (resultCode == RESULT_OK) {
                     String profilePath = data.getStringExtra("profilePath");
-                    pathList.add(profilePath);
+                    writeLog("profilePath : " + profilePath);
                     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
                     LinearLayout linearLayout = new LinearLayout(WritePostActivity.this);
@@ -223,16 +306,19 @@ public class WritePostActivity extends BasicActivity {
 
                     ImageView imageView = new ImageView(WritePostActivity.this);
                     imageView.setLayoutParams(layoutParams);
+                    WritePostImageViewTag writePostImageViewTag = new WritePostImageViewTag(pathList.size(),profilePath);
+                    imageView.setTag(writePostImageViewTag);
+                    pathList.add(profilePath);
                     imageView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             cardLayout.setVisibility(View.VISIBLE);
                             selectImageView = (ImageView)v;
+
                         }
                     });
                     Glide.with(this).load(profilePath).override(1000).into(imageView);
                     linearLayout.addView(imageView);
-
 
                     EditText editText = new EditText(WritePostActivity.this);
                     editText.setLayoutParams(layoutParams);
@@ -245,6 +331,9 @@ public class WritePostActivity extends BasicActivity {
                 if(resultCode==RESULT_OK){
                     String path = data.getStringExtra("profilePath");
                     Glide.with(this).load(path).override(1000).into(selectImageView);
+                    WritePostImageViewTag writePostImageViewTag = (WritePostImageViewTag)selectImageView.getTag();
+                    int pathListIndex = writePostImageViewTag.getIndex();
+                    pathList.set(pathListIndex,path);
                 }
             }
         }
@@ -255,5 +344,58 @@ public class WritePostActivity extends BasicActivity {
         intent.putExtra("media", media);
         startActivityForResult(intent, requestCode);
     }
+
+    private void updateInit(){
+        ((Button)findViewById(R.id.checkBtn)).setText("수정");
+        ((EditText)findViewById(R.id.writePostTitleEd)).setText(postInfo.getTitle());
+        ArrayList<String> contents = (ArrayList<String>) postInfo.getContents();
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        writeLog("contentSize : " + contents.size());
+        for(int i = 0; i < contents.size();i++) {
+            LinearLayout linearLayout = new LinearLayout(WritePostActivity.this);
+            linearLayout.setLayoutParams(layoutParams);
+            linearLayout.setOrientation(LinearLayout.VERTICAL);
+            linearLayout.setTag("la");
+            layout.addView(linearLayout);
+
+            String content = contents.get(i);
+            if (Patterns.WEB_URL.matcher(content).matches()) {
+                pathList.add(content);
+                updatePathList.add(content);
+                ImageView contentImageView = new ImageView(getApplicationContext());
+                contentImageView.setLayoutParams(layoutParams);
+                contentImageView.setAdjustViewBounds(true);
+                linearLayout.addView(contentImageView);
+                Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                contentImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        cardLayout.setVisibility(View.VISIBLE);
+                        selectImageView = (ImageView)v;
+                    }
+                });
+            }else {
+                if (i !=0) {
+                    if (content.trim().length() > 0) {
+                        EditText contentEditView = new EditText(getApplicationContext());
+                        contentEditView.setLayoutParams(layoutParams);
+                        contentEditView.setPadding(10, 10, 10, 100);
+                        linearLayout.addView(contentEditView);
+                        contentEditView.setText(content);
+                    }
+                }else{
+                    ((EditText)findViewById(R.id.contentEd)).setText(content);
+                }
+            }
+
+        }
+
+
+    }
+
+    private void update(PostInfo pi){
+
+    }
+
 
 }

@@ -31,7 +31,7 @@ public class MainActivity extends BasicActivity {
 
     private static final String TAG = "MainActivity";
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter myAdpater;
+    private MainPostAdapter mainPostAdapter;
     FirebaseUser user;
     FirebaseFirestore firestore;
 
@@ -113,11 +113,11 @@ public class MainActivity extends BasicActivity {
                                     info.setDocumentId(documentId);
                                     postList.add(info);
                                     writeLog(info.toString());
-                                }
 
-                                myAdpater = new MainPostAdapter(postList,MainActivity.this);
-                                recyclerView.setAdapter(myAdpater);
-                                myAdpater.notifyDataSetChanged();
+                                }
+                                mainPostAdapter = new MainPostAdapter(postList,MainActivity.this);
+                                recyclerView.setAdapter(mainPostAdapter);
+                                mainPostAdapter.notifyDataSetChanged();
                             } else {
                                 Log.d(TAG, "Error getting documents: ", task.getException());
                             }
