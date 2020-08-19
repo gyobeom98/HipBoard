@@ -100,20 +100,21 @@ public class MainActivity extends BasicActivity {
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    Log.d(TAG, document.getId() + " => " + document.getData());
-                                    Log.i("documentId",document.getId());
-                                    String documentId = document.getId();
-                                    String title = document.getData().get("title").toString();
-                                    ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
-                                    String publisher = document.getData().get("publisher").toString();
-                                    Date createAt = new Date(document.getDate("createAt").getTime());
-                                    long views = (Long) document.getData().get("views");
-                                    long likeCnt = (long) document.getData().get("likeCount");
-                                    PostInfo info = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
-                                    info.setDocumentId(documentId);
-                                    postList.add(info);
-                                    writeLog(info.toString());
-
+                                    if(postList.size()<9) {
+                                        Log.d(TAG, document.getId() + " => " + document.getData());
+                                        Log.i("documentId", document.getId());
+                                        String documentId = document.getId();
+                                        String title = document.getData().get("title").toString();
+                                        ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
+                                        String publisher = document.getData().get("publisher").toString();
+                                        Date createAt = new Date(document.getDate("createAt").getTime());
+                                        long views = (Long) document.getData().get("views");
+                                        long likeCnt = (long) document.getData().get("likeCount");
+                                        PostInfo info = new PostInfo(title, contents, publisher, views, likeCnt, createAt);
+                                        info.setDocumentId(documentId);
+                                        postList.add(info);
+                                        writeLog(info.toString());
+                                    }
                                 }
                                 mainPostAdapter = new MainPostAdapter(postList,MainActivity.this);
                                 recyclerView.setAdapter(mainPostAdapter);

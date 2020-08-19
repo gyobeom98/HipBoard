@@ -69,96 +69,15 @@ public class DetailPostActivity extends AppCompatActivity {
         menuImageView.setOnClickListener(onClickListener);
         myAuth = FirebaseAuth.getInstance();
         user = myAuth.getCurrentUser();
+
+        loadContents();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if(user !=null){
-            Intent idIntent = getIntent();
-            if(idIntent != null){
-                documentId = idIntent.getStringExtra("documentId");
-                if(documentId.length()>0){
-                    writeLog("documentId : " + documentId);
-                    firestore = FirebaseFirestore.getInstance();
-                    DocumentReference df =  firestore.collection("posts").document(documentId);
-                    df.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if(task.isSuccessful()){
-                                writeLog("success");
-                                DocumentSnapshot document = task.getResult();
-                                if(document !=null){
-                                    if(document.exists()){
-                                        writeLog("documentData " + document.getData());
-                                        String title = document.getData().get("title").toString();
-                                        ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
-                                        String publisher = document.getData().get("publisher").toString();
-                                        Date createAt = new Date(document.getDate("createAt").getTime());
-                                        long views = (Long) document.getData().get("views");
-                                        long likeCnt = (long) document.getData().get("likeCount");
-                                        postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
-                                        postInfo.setDocumentId(documentId);
-                                        titleTextView.setText(title);
-                                        dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(createAt));
-                                        viewsTextView.setText("조회수 : " + views);
-                                        likeCountTextView.setText(""+likeCnt);
-                                        detailTextView.setText(contents.get(0));
-                                        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                        int imgCnt = 0;
-                                        for(int i = 0; i < contents.size();i++){
-                                            String content = contents.get(i);
-                                            if(Patterns.WEB_URL.matcher(content).matches()){
-                                                writeLog(content);
-                                                String[] pathList = content.split("\\.");
-                                                String type = pathList[pathList.length-1];
-                                                type = type.substring(0,type.indexOf('?'));
-                                                writeLog(type);
-                                                writeLog("imageName : " + imgCnt+"."+type);
-                                                imageNames.add(imgCnt+"."+type);
-                                                ImageView contentImageView = new ImageView(getApplicationContext());
-                                                contentImageView.setLayoutParams(layoutParams);
-                                                contentImageView.setAdjustViewBounds(true);
-                                                contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                                                contentLayout.addView(contentImageView);
-                                                Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
-                                                writeLog(content);
-                                                imgCnt++;
-                                            }else {
-                                                if (content.length() > 0) {
-                                                    TextView contentTextView = new TextView(getApplicationContext());
-                                                    contentTextView.setLayoutParams(layoutParams);
-                                                    contentTextView.setPadding(10,10,10,100);
-                                                    contentLayout.addView(contentTextView);
-                                                    contentTextView.setText(content);
-
-                                                }
-                                            }
-                                        }
-
-                                        if(user.equals(postInfo.getPublisher())){
-                                            if(menuImageView.getVisibility()!=View.VISIBLE){
-                                                menuImageView.setVisibility(View.VISIBLE);
-                                            }else{
-                                                menuImageView.setVisibility(View.GONE);
-                                            }
-                                        }
-                                    }else{
-                                        writeLog("noSuchData");
-                                    }
-                                }
-
-
-                            }else{
-                                writeLog("failed");
-                            }
-                        }
-                    });
-                }
-            }
-        }
-
+        loadContents();
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -288,6 +207,95 @@ public class DetailPostActivity extends AppCompatActivity {
 
 
 
+        }
+
+
+    }
+
+    private void loadContents(){
+        if(user !=null){
+            Intent idIntent = getIntent();
+            if(idIntent != null){
+                documentId = idIntent.getStringExtra("documentId");
+                if(documentId.length()>0){
+                    writeLog("documentId : " + documentId);
+                    firestore = FirebaseFirestore.getInstance();
+                    DocumentReference df =  firestore.collection("posts").document(documentId);
+                    df.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                            if(task.isSuccessful()){
+                                writeLog("success");
+                                DocumentSnapshot document = task.getResult();
+                                if(document !=null){
+                                    if(document.exists()){
+                                        writeLog("documentData " + document.getData());
+                                        String title = document.getData().get("title").toString();
+                                        ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
+                                        String publisher = document.getData().get("publisher").toString();
+                                        Date createAt = new Date(document.getDate("createAt").getTime());
+                                        long views = (Long) document.getData().get("views");
+                                        long likeCnt = (long) document.getData().get("likeCount");
+                                        postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
+                                        postInfo.setDocumentId(documentId);
+                                        titleTextView.setText(title);
+                                        dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(createAt));
+                                        viewsTextView.setText("조회수 : " + views);
+                                        likeCountTextView.setText(""+likeCnt);
+                                        detailTextView.setText(contents.get(0));
+                                        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                        int imgCnt = 0;
+                                        contentLayout.removeAllViewsInLayout();
+                                        for(int i = 0; i < contents.size();i++){
+                                            String content = contents.get(i);
+                                            if(Patterns.WEB_URL.matcher(content).matches()){
+                                                writeLog(content);
+                                                String[] pathList = content.split("\\.");
+                                                String type = pathList[pathList.length-1];
+                                                type = type.substring(0,type.indexOf('?'));
+                                                writeLog(type);
+                                                writeLog("imageName : " + imgCnt+"."+type);
+                                                imageNames.add(imgCnt+"."+type);
+                                                ImageView contentImageView = new ImageView(getApplicationContext());
+                                                contentImageView.setLayoutParams(layoutParams);
+                                                contentImageView.setAdjustViewBounds(true);
+                                                contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                                contentLayout.addView(contentImageView);
+                                                Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                                                writeLog(content);
+                                                imgCnt++;
+                                            }else {
+                                                if (content.length() > 0) {
+                                                    TextView contentTextView = new TextView(getApplicationContext());
+                                                    contentTextView.setLayoutParams(layoutParams);
+                                                    contentTextView.setPadding(10,10,10,100);
+                                                    contentLayout.addView(contentTextView);
+                                                    contentTextView.setText(content);
+
+                                                }
+                                            }
+                                        }
+
+                                        if(user.equals(postInfo.getPublisher())){
+                                            if(menuImageView.getVisibility()!=View.VISIBLE){
+                                                menuImageView.setVisibility(View.VISIBLE);
+                                            }else{
+                                                menuImageView.setVisibility(View.GONE);
+                                            }
+                                        }
+                                    }else{
+                                        writeLog("noSuchData");
+                                    }
+                                }
+
+
+                            }else{
+                                writeLog("failed");
+                            }
+                        }
+                    });
+                }
+            }
         }
 
 
