@@ -3,6 +3,8 @@ package com.gyobeom29.hipboard.activity;
 
 import android.os.Bundle;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.gyobeom29.hipboard.MemberInfo;
 import com.gyobeom29.hipboard.R;
 
@@ -67,6 +69,8 @@ public class MemberInitActivity extends BasicActivity {
         setContentView(R.layout.activity_member_init);
         startingToast("memeber init create()");
 
+        setActionBarTitle("회원 정보");
+
         mAuth = FirebaseAuth.getInstance();
 
         findViewById(R.id.addInfoBtn).setOnClickListener(onClickListener);
@@ -93,7 +97,7 @@ public class MemberInitActivity extends BasicActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.addInfoBtn :
-                    storageUploader();
+                    storageUploader(1);
                     break;
 
                 case R.id.profileImageView :
@@ -158,7 +162,7 @@ public class MemberInitActivity extends BasicActivity {
 
 
 
-    private void storageUploader() {
+    private void storageUploader(final int where) {
 
         final String name = ((EditText) findViewById(R.id.member_nameEditText)).getText().toString();
         final String phone = ((EditText) findViewById(R.id.member_phoneEditText)).getText().toString();
@@ -203,7 +207,11 @@ public class MemberInitActivity extends BasicActivity {
                                 Uri downloadUri = task.getResult();
                                 Log.i(TAG, "이미지 업로드 성공 URI:" + downloadUri);
                                 MemberInfo memberInfo = new MemberInfo(name, phone, birth, address, downloadUri.toString());
-                                storeUploader(memberInfo);
+
+                                if(where == 1)
+                                 storeUploader(memberInfo);
+//                                else
+//                                 databaseUploader(memberInfo);
 
                             } else {
                                 // Handle failures
@@ -241,6 +249,23 @@ public class MemberInitActivity extends BasicActivity {
         });
 
     }
+
+//    private void databaseUploader(MemberInfo memberInfo){
+//        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+//        mDatabase.child("users").child(user.getUid()).setValue(memberInfo).addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                startingToast("회원 정보 등록 성공(dataBase)");
+//                startActivity(MainActivity.class);
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                startingToast("회원 정보 등록 실패");
+//            }
+//        });
+//    }
+
 
     public void startingToast(String msg){
         Toast.makeText(getApplicationContext(),msg, Toast.LENGTH_SHORT).show();

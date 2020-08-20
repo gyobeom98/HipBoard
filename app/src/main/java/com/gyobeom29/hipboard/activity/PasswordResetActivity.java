@@ -28,6 +28,7 @@ public class PasswordResetActivity extends BasicActivity {
         setContentView(R.layout.activity_password_reset);
 
         mAuth = FirebaseAuth.getInstance();
+        setActionBarTitle("비밀번호 재설정");
 
         findViewById(R.id.passwordResetBtn).setOnClickListener(onClickListener);
         loaderLayout = findViewById(R.id.loaderLayout);

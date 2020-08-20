@@ -91,6 +91,10 @@ public class CameraActivity extends BasicActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        setActionBarTitle("카메라");
+
+        Log.i("여기","왔음");
+
         if (ContextCompat.checkSelfPermission(
                 getApplicationContext(), Manifest.permission.CAMERA) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -102,8 +106,6 @@ public class CameraActivity extends BasicActivity {
                 ActivityCompat.requestPermissions(CameraActivity.this,new String[]{Manifest.permission.CAMERA},1);
                 startingToast("권한을 허용 해주세요");
             }
-        }else {
-            startActi(MainActivity.class);
         }
 
 

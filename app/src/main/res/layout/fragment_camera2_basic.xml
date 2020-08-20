@@ -18,7 +18,13 @@
     android:layout_height="match_parent"
     android:gravity="center_vertical">
 
+    <include
+        layout="@layout/view_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <com.gyobeom29.hipboard.view.AutoFitTextureView
+        android:layout_below="@+id/toolbar"
         android:id="@+id/texture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

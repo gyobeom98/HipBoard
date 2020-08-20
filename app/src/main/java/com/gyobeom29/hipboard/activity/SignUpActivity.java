@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -17,6 +18,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.gyobeom29.hipboard.R;
+
+import java.util.regex.Pattern;
 
 public class SignUpActivity extends BasicActivity {
 
@@ -32,6 +35,8 @@ public class SignUpActivity extends BasicActivity {
         setContentView(R.layout.activity_sign_up);
 
         mAuth = FirebaseAuth.getInstance();
+
+        setActionBarTitle("회원가입");
 
         findViewById(R.id.signUpButton).setOnClickListener(onClickListener);
         findViewById(R.id.go_to_loginBtn).setOnClickListener(onClickListener);
@@ -59,34 +64,41 @@ public class SignUpActivity extends BasicActivity {
         String password = ((EditText) findViewById(R.id.passwordEditText)).getText().toString();
         String passwordCheck = ((EditText) findViewById(R.id.passwordCheckEditText)).getText().toString();
         if (email.length() > 0 && password.length() > 0 && passwordCheck.length() > 0) {
-            if (password.equals(passwordCheck)) {
-                loaderLayout.setVisibility(View.VISIBLE);
-                mAuth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                loaderLayout.setVisibility(View.GONE);
-                                if (task.isSuccessful()) {
-                                    // Sign in success, update UI with the signed-in user's information
-                                    startingToast("회원가입을 성공 했습니다.");
-                                    Log.d(TAG, "createUserWithEmail:success");
-                                    FirebaseUser user = mAuth.getCurrentUser();
-                                    ((EditText) findViewById(R.id.passwordCheckEditText)).setText("");
-                                    ((EditText) findViewById(R.id.passwordEditText)).setText("");
-                                    ((EditText) findViewById(R.id.emailEditText)).setText("");
+            if(Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                if (Pattern.matches("((?=.*[a-z])(?=.*[0-9]).{8,20})",password) && password.equals(passwordCheck)) {
+                    loaderLayout.setVisibility(View.VISIBLE);
+                    mAuth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                    loaderLayout.setVisibility(View.GONE);
+                                    if (task.isSuccessful()) {
+                                        // Sign in success, update UI with the signed-in user's information
+                                        startingToast("회원가입을 성공 했습니다.");
+                                        Log.d(TAG, "createUserWithEmail:success");
+                                        mAuth.signOut();
+                                        ((EditText) findViewById(R.id.passwordCheckEditText)).setText("");
+                                        ((EditText) findViewById(R.id.passwordEditText)).setText("");
+                                        ((EditText) findViewById(R.id.emailEditText)).setText("");
 
 //                            updateUI(user);
-                                } else {
-                                    // If sign in fails, display a message to the user.
-                                    if (task.getException() != null)
-                                        startingToast(task.getException().toString());
-                                }
+                                    } else {
+                                        // If sign in fails, display a message to the user.
+                                        if (task.getException() != null)
+                                            startingToast(task.getException().toString());
+                                    }
 
-                                // ...
-                            }
-                        });
-            } else {
-                startingToast("비밀번호가 일치 하지 않습니다.");
+                                    // ...
+                                }
+                            });
+                } else {
+                    startingToast("비밀번호가 일치 하지 않습니다.");
+                    writeLog(password);
+                    writeLog(passwordCheck);
+
+                }
+            }else{
+                startingToast("이메일을 다시 확인 해주세요");
             }
         } else {
             startingToast("입력하지 않은 값이 있습니다. \n이메일 또는 비밀번호를 입력 해주세요.");
@@ -109,5 +121,9 @@ public class SignUpActivity extends BasicActivity {
         android.os.Process.killProcess(android.os.Process.myPid());
         System.exit(1);
 
+    }
+
+    private void writeLog(String msg){
+        Log.i(TAG,msg);
     }
 }

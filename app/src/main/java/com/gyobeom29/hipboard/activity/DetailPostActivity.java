@@ -1,16 +1,17 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -18,6 +19,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -31,6 +42,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.gyobeom29.hipboard.Comment;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
 
@@ -39,23 +51,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class DetailPostActivity extends AppCompatActivity {
+public class DetailPostActivity extends BasicActivity {
 
     private static final String TAG = "DetailPostActivity";
 
     private FirebaseFirestore firestore;
     private FirebaseUser user;
     private FirebaseAuth myAuth;
-    private ImageView menuImageView;
     private String documentId;
     private PostInfo postInfo;
     private StorageReference storageRef;
     private FirebaseStorage storage;
     private ArrayList<String> imageNames;
-
-    private TextView titleTextView , detailTextView, viewsTextView, dateTextView, likeCountTextView;
-
-    private LinearLayout contentLayout;
+    private long views;
+    private ImageView menuImageView;
+    private String publusherName;
+    private TextView titleTextView , detailTextView, viewsTextView, dateTextView, likeCountTextView,publisherTextView;
+    private EditText postsCommentEditText;
+    private ArrayList<SimpleExoPlayer> players;
+    private LinearLayout contentLayout,commentLayout;
+    private ArrayList<Long> playersPosition;
 
 
     @Override
@@ -65,31 +80,20 @@ public class DetailPostActivity extends AppCompatActivity {
 
         init();
         imageNames = new ArrayList<>();
+        views = -1;
 
-        menuImageView.setOnClickListener(onClickListener);
         myAuth = FirebaseAuth.getInstance();
         user = myAuth.getCurrentUser();
 
-        loadContents();
+        loadContents(1);
 
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        loadContents();
+    protected void onRestart() {
+        super.onRestart();
+        loadContents(2);
     }
-
-    View.OnClickListener onClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.moreImageView : showPopup(v); break;
-            }
-
-        }
-    };
-
 
     private void startActivityFinish(Class c){
         Intent intent = new Intent(this,c);
@@ -101,43 +105,11 @@ public class DetailPostActivity extends AppCompatActivity {
         Log.i(TAG,msg);
     }
 
-    private void showPopup(View v) {
-        PopupMenu popup = new PopupMenu(this, v);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-
-                switch (item.getItemId()){
-                    case R.id.modifyPost : startingTost("modify"); Intent intent = new Intent(DetailPostActivity.this,WritePostActivity.class);
-                    writeLog("postInfo : " + postInfo.toString());
-                        intent.putExtra("postInfo",postInfo);
-                        intent.putExtra("createAt",postInfo.getCreateAt().getTime());
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        startActivity(intent);
-                    return true;
-                    case R.id.deletePost :
-                        if(imageNames.size()>0){
-                            deleteStorageImage();
-                        }else {
-                            deletePost();
-                        }
-
-                        return true;
-                    default: return  false;
-                }
-            }
-        });
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.post_menu, popup.getMenu());
-        popup.show();
-    }
-
     private void startingTost(String msg){
         Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT).show();
     }
 
     private void deletePost(){
-
             firestore.collection("posts").document(documentId)
                     .delete()
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -158,13 +130,53 @@ public class DetailPostActivity extends AppCompatActivity {
 
 
     private void init(){
-        menuImageView = findViewById(R.id.moreImageView);
+        commentLayout = findViewById(R.id.comment_layout);
+        postsCommentEditText = findViewById(R.id.posts_comment);
+        publisherTextView = findViewById(R.id.detail_post_publisher);
+        menuImageView = findViewById(R.id.toolbar_menu_imageView);
         titleTextView = findViewById(R.id.detail_post_title_textView);
         detailTextView = findViewById(R.id.detail_post_textView);
         viewsTextView = findViewById(R.id.detail_post_viewsTextView);
         dateTextView = findViewById(R.id.detail_post_date_textView);
         likeCountTextView = findViewById(R.id.detail_post_likeCountTextView);
         contentLayout = findViewById(R.id.detail_post_contents_layout);
+        findViewById(R.id.posts_comment_btn).setOnClickListener(onClickListener);
+    }
+
+    View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.posts_comment_btn :
+                    String comment = postsCommentEditText.getText().toString();
+                    if(comment.trim().length()>0){
+                        boolean isWriter = false;
+                        postsCommentEditText.setText("");
+                        if(postInfo.getPublisher().equals(user.getUid())){
+                            isWriter = true;
+                        }
+                        commentUpload(new Comment(comment,user.getUid(),isWriter,new Date()));
+                    }
+                      break;
+            }
+        }
+    };
+
+    private void commentUpload(Comment comment) {
+        DocumentReference documentReference = firestore.collection("posts").document(documentId).collection("comments").document();
+        documentReference.set(comment).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
+
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                writeLog("comment 올리기 성공");
+                loadContents(2);
+            }
+        });
     }
 
     private void deleteStorageImage(){
@@ -204,18 +216,13 @@ public class DetailPostActivity extends AppCompatActivity {
                 }
             });
 
-
-
-
         }
-
-
     }
-
-    private void loadContents(){
+    private void loadContents(final int where){
         if(user !=null){
             Intent idIntent = getIntent();
             if(idIntent != null){
+                players = new ArrayList<>();
                 documentId = idIntent.getStringExtra("documentId");
                 if(documentId.length()>0){
                     writeLog("documentId : " + documentId);
@@ -234,17 +241,37 @@ public class DetailPostActivity extends AppCompatActivity {
                                         ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
                                         String publisher = document.getData().get("publisher").toString();
                                         Date createAt = new Date(document.getDate("createAt").getTime());
-                                        long views = (Long) document.getData().get("views");
                                         long likeCnt = (long) document.getData().get("likeCount");
                                         postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
                                         postInfo.setDocumentId(documentId);
+                                        getName(publisher);
+
+                                        if(where==1) {
+                                            views = (Long) document.getData().get("views");
+                                            setActionBarTitle("게시글 : " + postInfo.getTitle());
+                                            viewsUp();
+                                        }
+                                        if(postInfo.getPublisher().equals(user.getUid())){
+                                            menuImageView.setVisibility(View.VISIBLE);
+                                            menuImageView.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    showPopup(v);
+                                                }
+                                            });
+                                        }else{
+                                            menuImageView.setVisibility(View.GONE);
+                                        }
+
                                         titleTextView.setText(title);
                                         dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(createAt));
+                                        writeLog("views : " + views);
                                         viewsTextView.setText("조회수 : " + views);
                                         likeCountTextView.setText(""+likeCnt);
                                         detailTextView.setText(contents.get(0));
                                         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                                         int imgCnt = 0;
+                                        int videoCnt = 0;
                                         contentLayout.removeAllViewsInLayout();
                                         for(int i = 0; i < contents.size();i++){
                                             String content = contents.get(i);
@@ -256,16 +283,48 @@ public class DetailPostActivity extends AppCompatActivity {
                                                 writeLog(type);
                                                 writeLog("imageName : " + imgCnt+"."+type);
                                                 imageNames.add(imgCnt+"."+type);
-                                                ImageView contentImageView = new ImageView(getApplicationContext());
-                                                contentImageView.setLayoutParams(layoutParams);
-                                                contentImageView.setAdjustViewBounds(true);
-                                                contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                                                contentLayout.addView(contentImageView);
-                                                Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                                                if(CheckImageVideo.isVideo(content)){
+                                                    final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(getApplicationContext());
+                                                    DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(),
+                                                            Util.getUserAgent(getApplicationContext(), getString(R.string.app_name)));
+                                                    // This is the MediaSource representing the media to be played.
+                                                    MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                                                                    .createMediaSource(Uri.parse(content));
+
+                                                    // Prepare the player with the source.
+                                                    player.prepare(videoSource);
+                                                    final PlayerView playerView = getPlayerView();
+
+                                                    player.addVideoListener(new VideoListener() {
+                                                        @Override
+                                                        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                                                            playerView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,height));
+                                                        }
+                                                    });
+
+//                                                    player.setPlayWhenReady(false);
+                                                    player.getContentDuration();
+                                                    players.add(player);
+                                                    playerView.setPlayer(player);
+                                                    contentLayout.addView(playerView);
+                                                    if(where == 2){
+                                                        if(playersPosition.size()>0 && videoCnt<=playersPosition.size()){
+                                                            player.seekTo(playersPosition.get(videoCnt));
+                                                        }
+                                                    }
+                                                    videoCnt++;
+                                                }else{
+                                                    ImageView contentImageView = new ImageView(getApplicationContext());
+                                                    contentImageView.setLayoutParams(layoutParams);
+                                                    contentImageView.setAdjustViewBounds(true);
+                                                    contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                                    contentLayout.addView(contentImageView);
+                                                    Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                                                }
                                                 writeLog(content);
                                                 imgCnt++;
                                             }else {
-                                                if (content.length() > 0) {
+                                                if (content.length() > 0 && i>0) {
                                                     TextView contentTextView = new TextView(getApplicationContext());
                                                     contentTextView.setLayoutParams(layoutParams);
                                                     contentTextView.setPadding(10,10,10,100);
@@ -275,19 +334,30 @@ public class DetailPostActivity extends AppCompatActivity {
                                                 }
                                             }
                                         }
-
-                                        if(user.equals(postInfo.getPublisher())){
-                                            if(menuImageView.getVisibility()!=View.VISIBLE){
-                                                menuImageView.setVisibility(View.VISIBLE);
-                                            }else{
-                                                menuImageView.setVisibility(View.GONE);
-                                            }
-                                        }
                                     }else{
                                         writeLog("noSuchData");
                                     }
                                 }
+                                firestore.collection("posts").document(documentId).collection("comments").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                    @Override
+                                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                        commentLayout.removeAllViewsInLayout();
+                                        for (QueryDocumentSnapshot s: queryDocumentSnapshots) {
+                                            writeLog("일단 받아봄 : " + s.getData().toString());
+                                            TextView neTextView = new TextView(getApplicationContext());
+                                            neTextView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                            commentLayout.addView(neTextView);
+                                            neTextView.setText(s.getString("content"));
+                                            neTextView.setPadding(5,10,0,0);
+                                        }
 
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+
+                                    }
+                                });
 
                             }else{
                                 writeLog("failed");
@@ -300,6 +370,99 @@ public class DetailPostActivity extends AppCompatActivity {
 
 
     }
+
+    private void viewsUp(){
+        views++;
+        DocumentReference ref = firestore.collection("posts").document(documentId);
+        ref.update("views",views).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    writeLog("조회수 올리기 성공");
+                }else{
+                    writeLog("조회수 올리기 실패");
+                }
+            }
+        });
+    }
+
+
+    private void showPopup(View v) {
+        PopupMenu popup = new PopupMenu(this, v);
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+
+                switch (item.getItemId()){
+                    case R.id.modifyPost : Intent intent = new Intent(DetailPostActivity.this,WritePostActivity.class);
+                        writeLog("postInfo : " + postInfo.toString());
+                        intent.putExtra("postInfo",postInfo);
+                        intent.putExtra("createAt",postInfo.getCreateAt().getTime());
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        return true;
+                    case R.id.deletePost :
+                        if(imageNames.size()>0){
+                            deleteStorageImage();
+                        }else {
+                            deletePost();
+                        }
+
+                        return true;
+                    default: return  false;
+                }
+            }
+        });
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.post_menu, popup.getMenu());
+        popup.show();
+    }
+
+    private void getName(String publisher){
+        firestore.collection("users").document(publisher).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if(documentSnapshot.exists()){
+                    publusherName = (String) documentSnapshot.get("name");
+                    if(publusherName != null){
+                        publisherTextView.setVisibility(View.VISIBLE);
+                        publisherTextView.setText("작성자 : " + publusherName);
+                    }else{
+                        publisherTextView.setVisibility(View.GONE);
+                    }
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                writeLog("getNamesError : " + e.toString());
+                publisherTextView.setVisibility(View.GONE);
+            }
+        });
+
+    }
+    private PlayerView getPlayerView(){
+        LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        PlayerView playerView = (PlayerView) inflater.inflate(R.layout.view_content_player,null,false);
+        return playerView;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        playersPosition = new ArrayList<>();
+        if(players.size()>0){
+            for (int i = 0; i < players.size();i++){
+                writeLog("getCurrentPosition : " + players.get(i).getCurrentPosition());
+                writeLog("getCurrentTimeLine : " + players.get(i).getCurrentTimeline());
+                playersPosition.add(players.get(i).getCurrentPosition());
+            }
+        }
+    }
+
+
+
+
 
 
 }

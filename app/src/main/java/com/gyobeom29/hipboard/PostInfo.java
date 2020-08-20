@@ -98,11 +98,11 @@ public class PostInfo implements Parcelable {
         this.publisher = publisher;
     }
 
-    public void setViews(int views) {
+    public void setViews(long views) {
         this.views = views;
     }
 
-    public void setLikeCount(int likeCount) {
+    public void setLikeCount(long likeCount) {
         this.likeCount = likeCount;
     }
 

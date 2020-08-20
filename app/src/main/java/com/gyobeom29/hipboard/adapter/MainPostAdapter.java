@@ -1,7 +1,9 @@
 package com.gyobeom29.hipboard.adapter;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +16,18 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.VideoListener;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
+import com.gyobeom29.hipboard.activity.CheckImageVideo;
 import com.gyobeom29.hipboard.activity.DetailPostActivity;
 
 import java.text.SimpleDateFormat;
@@ -93,12 +105,35 @@ public static class GalleryViewHolder extends RecyclerView.ViewHolder {
             if(i<3){
             String content = contentList.get(i);
             if(Patterns.WEB_URL.matcher(content).matches()){
-                ImageView contentImageView = new ImageView(activity);
-                contentImageView.setLayoutParams(layoutParams);
-                contentImageView.setAdjustViewBounds(true);
-                contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                contentsLayout.addView(contentImageView);
-                Glide.with(activity).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+
+                if(CheckImageVideo.isVideo(content)){
+                    final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(activity);
+                    DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(activity,
+                            Util.getUserAgent(activity, "yourApplicationName"));
+
+                    // This is the MediaSource representing the media to be played.
+                    MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .createMediaSource(Uri.parse(content));
+
+                    // Prepare the player with the source.
+                    player.prepare(videoSource);
+                    final PlayerView playerView = getPlayerView();
+                    playerView.setPlayer(player);
+                    player.addVideoListener(new VideoListener() {
+                        @Override
+                        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                            playerView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,height));
+                        }
+                    });
+                    contentsLayout.addView(playerView);
+                }else {
+                    ImageView contentImageView = new ImageView(activity);
+                    contentImageView.setLayoutParams(layoutParams);
+                    contentImageView.setAdjustViewBounds(true);
+                    contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                    contentsLayout.addView(contentImageView);
+                    Glide.with(activity).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                }
             }else {
                 if (content.length() > 0) {
                     TextView contentTextView = new TextView(activity);
@@ -119,4 +154,11 @@ public static class GalleryViewHolder extends RecyclerView.ViewHolder {
     public int getItemCount() {
         return postInfoList.size();
     }
+
+    private PlayerView getPlayerView(){
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        PlayerView playerView = (PlayerView) inflater.inflate(R.layout.view_content_player,null,false);
+        return playerView;
+    }
+
 }

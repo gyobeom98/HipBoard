@@ -3,8 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    
+
+    <include
+        layout="@layout/view_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
+        android:layout_below="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -57,7 +63,7 @@
                 android:id="@+id/go_to_passwordResetBtn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:text="비밀번호 찾기" />
         </LinearLayout>
 
     </LinearLayout>

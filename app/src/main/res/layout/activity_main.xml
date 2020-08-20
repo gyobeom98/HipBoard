@@ -6,7 +6,13 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
+    <include
+        layout="@layout/view_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.recyclerview.widget.RecyclerView
+        android:layout_below="@+id/toolbar"
         android:id="@+id/mainRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -15,6 +21,12 @@
         android:id="@+id/logoutButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="54dp"
+        android:layout_marginLeft="54dp"
+        android:layout_marginTop="84dp"
         android:text="로그아웃" />
 
     <Button
@@ -26,6 +38,18 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="39dp" />
 
+
+    <Button
+        android:id="@+id/userInfo_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="80dp"
+        android:layout_marginLeft="80dp"
+        android:layout_marginTop="225dp"
+        android:text="유저 정보" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/mainFloatBtn"

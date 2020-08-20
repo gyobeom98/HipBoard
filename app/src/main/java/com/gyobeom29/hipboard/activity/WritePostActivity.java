@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -20,10 +21,20 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
@@ -50,18 +61,22 @@ public class WritePostActivity extends BasicActivity {
     int pathCount;
     int successCount;
     private RelativeLayout cardLayout;
-    private ImageView selectImageView;
+    private View selectImageView;
     private RelativeLayout loaderLayout;
     PostInfo postInfo;
     DocumentReference documentReference;
     private int imageNumber;
     private int imagviewCount;
+    private FirebaseDatabase firebaseDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_write_post);
-        layout = findViewById(R.id.contentsLayout);
+
+        setActionBarTitle("게시글 작성");
+        user = FirebaseAuth.getInstance().getCurrentUser();
+       layout = findViewById(R.id.contentsLayout);
         findViewById(R.id.checkBtn).setOnClickListener(onClickListener);
         findViewById(R.id.writePostImagBtn).setOnClickListener(onClickListener);
         findViewById(R.id.writePostVideoBtn).setOnClickListener(onClickListener);
@@ -71,12 +86,12 @@ public class WritePostActivity extends BasicActivity {
         loaderLayout = findViewById(R.id.loaderLayout);
         cardLayout = findViewById(R.id.cardLayout);
         cardLayout.setOnClickListener(onClickListener);
-        user = FirebaseAuth.getInstance().getCurrentUser();
         postInfo = getIntent().getParcelableExtra("postInfo");
         if(postInfo != null){
             updateInit();
             writeLog(postInfo.toString());
-             postInfo.setCreateAt(new Date(getIntent().getLongExtra("createAt",0)));
+            setActionBarTitle("게시글 수정 : " + postInfo.getTitle());
+            postInfo.setCreateAt(new Date(getIntent().getLongExtra("createAt",0)));
         }
 
     }
@@ -103,7 +118,6 @@ public class WritePostActivity extends BasicActivity {
                 case R.id.imageModify: startActiNoFinish(GalleryActivity.class,"image",102);  break;
                 case R.id.videoModify: startActiNoFinish(GalleryActivity.class,"video",102); break;
                 case R.id.deleteBtn:
-                    writeLog(selectImageView.toString());
                     if(((LinearLayout)selectImageView.getParent()).getChildCount()<=2){
                         layout.removeView((View) selectImageView.getParent());
                     }else {
@@ -147,17 +161,12 @@ public class WritePostActivity extends BasicActivity {
                         contentList.add(text);
                     }
                 } else {
-                    writeLog("여기 왔음");
-                    writeLog("pathListSize : " + pathList.size());
-                    writeLog("pathCount : " + pathCount);
-                    writeLog("pathList.get(pathCount) : " + pathList.get(pathCount));
                     contentList.add(pathList.get(pathCount));
                     imagviewCount++;
                     for (String str: contentList) {
                         writeLog("str : " + str);
                     }
                     String[] pathArray =  pathList.get(pathCount).split("\\.");
-                    writeLog("pathArray : " +pathArray[pathArray.length-1].trim());
                     String type = pathArray[pathArray.length-1];
                     if(postInfo!=null){
                         if(type.indexOf('?') >0)
@@ -166,16 +175,9 @@ public class WritePostActivity extends BasicActivity {
                     String documentId = documentReference.getId();
                     if(postInfo != null)
                         documentId = postInfo.getDocumentId();
-                    writeLog("type : " + type);
-                    writeLog("documentId : " + documentId);
-                    writeLog("path : " +"posts/" + documentId + "/" + pathCount + "." + type);
-                    writeLog("pathList : " + pathList.get(pathCount));
-                    writeLog("pathCount : " + pathCount);
-                    writeLog("contentList : " + contentList.get(pathCount));
                     boolean isEquals = false;
                     for (int j=0; j < updatePathList.size();j++){
                         if(updatePathList.get(j).equals(pathList.get(pathCount))){
-                            writeLog("맞는지 확인");
                             isEquals = true;
                            break;
                         }else{
@@ -183,14 +185,10 @@ public class WritePostActivity extends BasicActivity {
                         }
                     }
                     if(postInfo==null) isEquals = false;
-                    writeLog("postInfo : " + postInfo);
-                    writeLog(isEquals+" :  isEqualse");
                     final StorageReference mountainImagesRef = storageRef.child("posts/" + documentId + "/" + pathCount + "." + type);
                     if(!isEquals) {
                         try {
-                            writeLog("확인 용");
                             InputStream stream = new FileInputStream(new File(pathList.get(pathCount)));
-                            writeLog("contentList.size()-1 : " + (contentList.size()-1));
                             StorageMetadata metadata = new StorageMetadata.Builder().setCustomMetadata("index", "" + (contentList.size() - 1)).build();
                             UploadTask uploadTask = mountainImagesRef.putStream(stream, metadata);
                             uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -231,6 +229,13 @@ public class WritePostActivity extends BasicActivity {
                                                 writeLog(postInfos.toString());
                                                 storeUpload(documentReference, postInfos);
                                             }
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            writeLog(e.toString());
+                                            loaderLayout.setVisibility(View.GONE);
+                                            e.printStackTrace();
                                         }
                                     });
 
@@ -322,7 +327,7 @@ public class WritePostActivity extends BasicActivity {
                         @Override
                         public void onClick(View v) {
                             cardLayout.setVisibility(View.VISIBLE);
-                            selectImageView = (ImageView)v;
+                            selectImageView =v;
 
                         }
                     });
@@ -340,10 +345,22 @@ public class WritePostActivity extends BasicActivity {
             case 102: {
                 if(resultCode==RESULT_OK){
                     String path = data.getStringExtra("profilePath");
-                    Glide.with(this).load(path).override(1000).into(selectImageView);
-                    WritePostImageViewTag writePostImageViewTag = (WritePostImageViewTag)selectImageView.getTag();
-                    int pathListIndex = writePostImageViewTag.getIndex();
-                    pathList.set(pathListIndex,path);
+                    if(selectImageView instanceof PlayerView){
+                        int selectIndex = layout.indexOfChild(selectImageView);
+                        writeLog("selectIndex : " + selectIndex);
+                        layout.removeViewAt(selectIndex);
+                        ImageView defaultImageView = new ImageView(getApplicationContext());
+                        defaultImageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        defaultImageView.setAdjustViewBounds(true);
+                        layout.addView(defaultImageView,selectIndex);
+                        Glide.with(this).load(path).override(1000).into( defaultImageView);
+                        pathList.set(selectIndex-1,path);
+                    }else {
+                        Glide.with(this).load(path).override(1000).into((ImageView) selectImageView);
+                        int selectIndex = layout.indexOfChild(selectImageView);
+                        writeLog("selectIndex : " + selectIndex);
+                        pathList.set(selectIndex-1, path);
+                    }
                 }
             }
         }
@@ -372,19 +389,50 @@ public class WritePostActivity extends BasicActivity {
             if (Patterns.WEB_URL.matcher(content).matches()) {
                 pathList.add(content);
                 updatePathList.add(content);
-                ImageView contentImageView = new ImageView(getApplicationContext());
-                contentImageView.setLayoutParams(layoutParams);
-                contentImageView.setAdjustViewBounds(true);
-                layout.addView(contentImageView);
-                Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
-                final int finalI = i;
-                contentImageView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        cardLayout.setVisibility(View.VISIBLE);
-                        selectImageView = (ImageView)v;
-                    }
-                });
+
+                if(CheckImageVideo.isVideo(content)){
+                    writeLog("여기 옴 ");
+                    final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(getApplicationContext());
+                    DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(),
+                            Util.getUserAgent(getApplicationContext(), getString(R.string.app_name)));
+                    // This is the MediaSource representing the media to be played.
+                    MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .createMediaSource(Uri.parse(content));
+
+                    // Prepare the player with the source.
+                    player.prepare(videoSource);
+                    final PlayerView playerView = getPlayerView();
+                    playerView.setPlayer(player);
+                    player.addVideoListener(new VideoListener() {
+                        @Override
+                        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                            playerView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,height));
+                        }
+                    });
+                    playerView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            cardLayout.setVisibility(View.VISIBLE);
+                            selectImageView = v;
+
+                        }
+                    });
+                    layout.addView(playerView);
+                }else {
+                    ImageView contentImageView = new ImageView(getApplicationContext());
+                    contentImageView.setLayoutParams(layoutParams);
+                    contentImageView.setAdjustViewBounds(true);
+                    layout.addView(contentImageView);
+                    Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
+                    final int finalI = i;
+                    contentImageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            cardLayout.setVisibility(View.VISIBLE);
+                            selectImageView = (ImageView) v;
+                        }
+                    });
+                }
             }else {
                 if (i !=0) {
                     writeLog("0이 아닐때 까지 옴");
@@ -406,5 +454,10 @@ public class WritePostActivity extends BasicActivity {
         writeLog("contentSize : " + contents.size());
     }
 
+    private PlayerView getPlayerView(){
+        LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        PlayerView playerView = (PlayerView) inflater.inflate(R.layout.view_content_player,null,false);
+        return playerView;
+    }
 
 }

@@ -37,7 +37,6 @@ public class GalleryActivity extends BasicActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (ContextCompat.checkSelfPermission(
                 getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -50,7 +49,7 @@ public class GalleryActivity extends BasicActivity {
                 startingToast("권한을 허용 해주세요");
             }
         }
-
+        setActionBarTitle("갤러리");
         recyclerView.setHasFixedSize(true);
 
         final int numberOfColumns = 3;

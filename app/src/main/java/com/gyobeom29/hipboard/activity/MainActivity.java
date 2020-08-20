@@ -24,7 +24,9 @@ import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
 import com.gyobeom29.hipboard.adapter.MainPostAdapter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 public class MainActivity extends BasicActivity {
@@ -41,15 +43,17 @@ public class MainActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        setActionBarTitle(R.string.app_name);
         mAuth = FirebaseAuth.getInstance();
-         user = FirebaseAuth.getInstance().getCurrentUser();
+        user = FirebaseAuth.getInstance().getCurrentUser();
         recyclerView = findViewById(R.id.mainRecyclerView);
         findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
         findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
         findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
+        findViewById(R.id.userInfo_btn).setOnClickListener(onClickListener);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this,RecyclerView.VERTICAL,false));
+
     }
 
     @Override
@@ -94,13 +98,12 @@ public class MainActivity extends BasicActivity {
                 }
             });
             final ArrayList<PostInfo> postList = new ArrayList<>();
-            firestore.collection("posts").orderBy("createAt", Query.Direction.DESCENDING).get()
+            firestore.collection("posts").orderBy("createAt", Query.Direction.DESCENDING).limit(10).get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                    if(postList.size()<9) {
                                         Log.d(TAG, document.getId() + " => " + document.getData());
                                         Log.i("documentId", document.getId());
                                         String documentId = document.getId();
@@ -114,7 +117,7 @@ public class MainActivity extends BasicActivity {
                                         info.setDocumentId(documentId);
                                         postList.add(info);
                                         writeLog(info.toString());
-                                    }
+
                                 }
                                 mainPostAdapter = new MainPostAdapter(postList,MainActivity.this);
                                 recyclerView.setAdapter(mainPostAdapter);
@@ -136,6 +139,7 @@ public class MainActivity extends BasicActivity {
                 case R.id.logoutButton : mAuth.signOut(); startActiNoFinish(SignUpActivity.class); break;
                 case R.id.member_in_it_btn : startActiNoFinish(MemberInitActivity.class); break;
                 case R.id.mainFloatBtn : startActiNoFinish(WritePostActivity.class); break;
+                case R.id.userInfo_btn : startActiNoFinish(UserInfoActivity.class); break;
             }
         }
     };
@@ -158,6 +162,14 @@ public class MainActivity extends BasicActivity {
 
     private void writeLog(String msg){
         Log.i(TAG,msg);
+    }
+
+    private Date getPreviousMonth(){
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.MONTH,-1);
+        Date date = c.getTime();
+        return date;
     }
 
 }
