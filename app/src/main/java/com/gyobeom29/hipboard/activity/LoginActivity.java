@@ -89,8 +89,7 @@ public class LoginActivity extends BasicActivity {
 //                                }else {
 //                                    Log.i(TAG, user.isEmailVerified() + "");
                                     startingToast("로그인 성공");
-                                    startActivity(MainActivity.class);
-                                    finish();
+                                    goMain();
 //                                }
                             } else {
                                 // If sign in fails, display a message to the user.
@@ -120,15 +119,15 @@ public class LoginActivity extends BasicActivity {
         startActivity(intent);
     }
 
+    private void goMain(){
+        Intent intent = new Intent(LoginActivity.this,MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
     private void emailCertification(String email,FirebaseUser user){
         user.sendEmailVerification();
     }
-
-
-
-
-
-
 
 
 }

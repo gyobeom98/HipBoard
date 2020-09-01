@@ -1,10 +1,16 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -36,8 +42,6 @@ public class MainActivity extends BasicActivity {
     private MainPostAdapter mainPostAdapter;
     FirebaseUser user;
     FirebaseFirestore firestore;
-
-
     FirebaseAuth mAuth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,4 +176,17 @@ public class MainActivity extends BasicActivity {
         return date;
     }
 
+    @Override
+    public void onBackPressed() {
+
+        AlertDialog.Builder alBuilder = new AlertDialog.Builder(MainActivity.this);
+        alBuilder.setMessage("정말 종료 하시겠습니까?");
+        alBuilder.setPositiveButton("종료", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                 MainActivity.super.onBackPressed();
+            }
+        });
+        alBuilder.create().show();
+    }
 }
