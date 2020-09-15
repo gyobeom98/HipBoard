@@ -1,16 +1,20 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
+
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,6 +22,13 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -38,18 +49,25 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.gyobeom29.hipboard.Comment;
+import com.gyobeom29.hipboard.FirebasePushMessage;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class DetailPostActivity extends BasicActivity {
 
@@ -72,7 +90,6 @@ public class DetailPostActivity extends BasicActivity {
     private LinearLayout contentLayout,commentLayout;
     private ArrayList<Long> playersPosition;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,7 +101,8 @@ public class DetailPostActivity extends BasicActivity {
 
         myAuth = FirebaseAuth.getInstance();
         user = myAuth.getCurrentUser();
-
+        writeLog("userUid : " + user.getUid());
+        getName(user.getUid());
         loadContents(1);
 
     }
@@ -110,21 +128,21 @@ public class DetailPostActivity extends BasicActivity {
     }
 
     private void deletePost(){
-            firestore.collection("posts").document(documentId)
-                    .delete()
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            writeLog("deleteSuccess");
-                            finish();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error deleting document", e);
-                        }
-                    });
+        firestore.collection("posts").document(documentId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        writeLog("deleteSuccess");
+                        finish();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error deleting document", e);
+                    }
+                });
 
     }
 
@@ -141,6 +159,7 @@ public class DetailPostActivity extends BasicActivity {
         likeCountTextView = findViewById(R.id.detail_post_likeCountTextView);
         contentLayout = findViewById(R.id.detail_post_contents_layout);
         findViewById(R.id.posts_comment_btn).setOnClickListener(onClickListener);
+
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -155,14 +174,14 @@ public class DetailPostActivity extends BasicActivity {
                         if(postInfo.getPublisher().equals(user.getUid())){
                             isWriter = true;
                         }
-                        commentUpload(new Comment(comment,user.getUid(),isWriter,new Date()));
+                        commentUpload(new Comment(comment,user.getUid(),isWriter,new Date(),publusherName));
                     }
-                      break;
+                    break;
             }
         }
     };
 
-    private void commentUpload(Comment comment) {
+    private void commentUpload(final Comment comment) {
         DocumentReference documentReference = firestore.collection("posts").document(documentId).collection("comments").document();
         documentReference.set(comment).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -174,6 +193,9 @@ public class DetailPostActivity extends BasicActivity {
             @Override
             public void onSuccess(Void aVoid) {
                 writeLog("comment 올리기 성공");
+                writeLog("Comment documentId : " + postInfo.getDocumentId());
+                if(!comment.isPostWriter())
+                    FirebasePushMessage.sendPush(postInfo,getApplicationContext());
                 loadContents(2);
             }
         });
@@ -224,7 +246,7 @@ public class DetailPostActivity extends BasicActivity {
             if(idIntent != null){
                 players = new ArrayList<>();
                 documentId = idIntent.getStringExtra("documentId");
-                if(documentId.length()>0){
+                if(documentId!=null && documentId.length()>0){
                     writeLog("documentId : " + documentId);
                     firestore = FirebaseFirestore.getInstance();
                     DocumentReference df =  firestore.collection("posts").document(documentId);
@@ -242,9 +264,10 @@ public class DetailPostActivity extends BasicActivity {
                                         String publisher = document.getData().get("publisher").toString();
                                         Date createAt = new Date(document.getDate("createAt").getTime());
                                         long likeCnt = (long) document.getData().get("likeCount");
-                                        postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt);
+                                        String publisherName = document.getData().get("publisherName").toString();
+                                        postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt,publisherName);
                                         postInfo.setDocumentId(documentId);
-                                        getName(publisher);
+
 
                                         if(where==1) {
                                             views = (Long) document.getData().get("views");
@@ -262,9 +285,14 @@ public class DetailPostActivity extends BasicActivity {
                                         }else{
                                             menuImageView.setVisibility(View.GONE);
                                         }
-
+                                        if(postInfo.getPublisherName()!=null && postInfo.getPublisherName().length()>0){
+                                            publisherTextView.setVisibility(View.VISIBLE);
+                                            publisherTextView.setText("작성자 : " + postInfo.getPublisherName());
+                                        }else{
+                                            publisherTextView.setVisibility(View.GONE);
+                                        }
                                         titleTextView.setText(title);
-                                        dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(createAt));
+                                        dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(createAt));
                                         writeLog("views : " + views);
                                         viewsTextView.setText("조회수 : " + views);
                                         likeCountTextView.setText(""+likeCnt);
@@ -289,7 +317,7 @@ public class DetailPostActivity extends BasicActivity {
                                                             Util.getUserAgent(getApplicationContext(), getString(R.string.app_name)));
                                                     // This is the MediaSource representing the media to be played.
                                                     MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                                                                    .createMediaSource(Uri.parse(content));
+                                                            .createMediaSource(Uri.parse(content));
 
                                                     // Prepare the player with the source.
                                                     player.prepare(videoSource);
@@ -338,17 +366,57 @@ public class DetailPostActivity extends BasicActivity {
                                         writeLog("noSuchData");
                                     }
                                 }
-                                firestore.collection("posts").document(documentId).collection("comments").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                firestore.collection("posts").document(documentId).collection("comments").orderBy("writeDate", Query.Direction.DESCENDING).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                                     @Override
                                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                         commentLayout.removeAllViewsInLayout();
-                                        for (QueryDocumentSnapshot s: queryDocumentSnapshots) {
-                                            writeLog("일단 받아봄 : " + s.getData().toString());
-                                            TextView neTextView = new TextView(getApplicationContext());
-                                            neTextView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                                            commentLayout.addView(neTextView);
-                                            neTextView.setText(s.getString("content"));
-                                            neTextView.setPadding(5,10,0,0);
+                                        for (QueryDocumentSnapshot qds: queryDocumentSnapshots) {
+                                            writeLog("일단 받아봄 : " + qds.getData().toString());
+                                            LinearLayout innerLayout = new LinearLayout(getApplicationContext());
+                                            innerLayout.setOrientation(LinearLayout.VERTICAL);
+                                            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            innerLayout.setLayoutParams(layoutParams);
+                                            innerLayout.setBackgroundResource(R.drawable.comment_inner_layout_shape);
+                                            innerLayout.setPadding(0,15,0,15);
+
+                                            LinearLayout innerTimeLayout = new LinearLayout(getApplicationContext());
+                                            innerTimeLayout.setOrientation(LinearLayout.HORIZONTAL);
+                                            innerTimeLayout.setLayoutParams(layoutParams);
+
+                                            TextView commentPublisherTextView = new TextView(getApplicationContext());
+
+                                            commentPublisherTextView.setText("작성자 : " + qds.getData().get("writePublisher").toString());
+
+                                            if((boolean)qds.getData().get("postWriter")){
+                                                commentPublisherTextView.append("\t 글쓴이");
+                                            }
+                                            innerTimeLayout.addView(commentPublisherTextView);
+
+                                            TextView commentTimeTextView = new TextView(getApplicationContext());
+                                            LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            textViewParams.weight = 1;
+                                            commentPublisherTextView.setLayoutParams(textViewParams);
+                                            textViewParams.weight = 1;
+                                            commentTimeTextView.setLayoutParams(textViewParams);
+                                            commentTimeTextView.setTextSize(12);
+                                            commentTimeTextView.setGravity(Gravity.RIGHT);
+
+                                            Date wrDate = new Date(qds.getDate("writeDate").getTime());
+
+                                            commentTimeTextView.setText("작성일 : " +new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(wrDate));
+
+                                            innerTimeLayout.addView(commentTimeTextView);
+
+                                            innerLayout.addView(innerTimeLayout);
+
+
+
+                                            TextView commentContentTextView = new TextView(getApplicationContext());
+                                            commentContentTextView.setLayoutParams(layoutParams);
+                                            innerLayout.addView(commentContentTextView);
+                                            commentLayout.addView(innerLayout);
+                                            commentContentTextView.setText("내용 : " + qds.getString("content"));
+                                            commentContentTextView.setPadding(5,10,0,0);
                                         }
 
                                     }
@@ -419,28 +487,21 @@ public class DetailPostActivity extends BasicActivity {
     }
 
     private void getName(String publisher){
-        firestore.collection("users").document(publisher).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        FirebaseFirestore.getInstance().collection("users").document(publisher).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if(documentSnapshot.exists()){
-                    publusherName = (String) documentSnapshot.get("name");
-                    if(publusherName != null){
-                        publisherTextView.setVisibility(View.VISIBLE);
-                        publisherTextView.setText("작성자 : " + publusherName);
-                    }else{
-                        publisherTextView.setVisibility(View.GONE);
-                    }
+                    publusherName =  documentSnapshot.get("name").toString();
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 writeLog("getNamesError : " + e.toString());
-                publisherTextView.setVisibility(View.GONE);
             }
         });
-
     }
+
     private PlayerView getPlayerView(){
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         PlayerView playerView = (PlayerView) inflater.inflate(R.layout.view_content_player,null,false);
@@ -462,6 +523,10 @@ public class DetailPostActivity extends BasicActivity {
 
 
 
+
+    private void println(String msg){
+        Log.i(TAG,msg);
+    }
 
 
 

@@ -17,19 +17,28 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.gyobeom29.hipboard.FireBaseUser;
+import com.gyobeom29.hipboard.FirebasePushMessage;
+import com.gyobeom29.hipboard.MyNoti;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
 import com.gyobeom29.hipboard.adapter.MainPostAdapter;
+import com.gyobeom29.hipboard.service.BoardFirebaseService;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -86,10 +95,11 @@ public class MainActivity extends BasicActivity {
                             Log.e("Boolean",""+document.exists());
                             if (document.exists()) {
                                 Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                                if(document.getData() == null) {
+                                if(document.getData().get("name") == null) {
                                     startActi(MemberInitActivity.class);
                                 }else{
                                     Log.e("documentData", "data" + document.getData());
+                                    FirebasePushMessage.getMessage(getApplicationContext());
                                 }
                             } else {
                                 startActi(MemberInitActivity.class);
@@ -117,7 +127,8 @@ public class MainActivity extends BasicActivity {
                                         Date createAt = new Date(document.getDate("createAt").getTime());
                                         long views = (Long) document.getData().get("views");
                                         long likeCnt = (long) document.getData().get("likeCount");
-                                        PostInfo info = new PostInfo(title, contents, publisher, views, likeCnt, createAt);
+                                        String publisherName = document.getData().get("publisherName").toString();
+                                        PostInfo info = new PostInfo(title, contents, publisher, views, likeCnt, createAt,publisherName);
                                         info.setDocumentId(documentId);
                                         postList.add(info);
                                         writeLog(info.toString());
@@ -140,7 +151,10 @@ public class MainActivity extends BasicActivity {
         @Override
         public void onClick(View v) {
             switch (v.getId()){
-                case R.id.logoutButton : mAuth.signOut(); startActiNoFinish(SignUpActivity.class); break;
+                case R.id.logoutButton :
+                    FireBaseUser.signOut();
+                    mAuth.signOut();
+                    startActiNoFinish(SignUpActivity.class); break;
                 case R.id.member_in_it_btn : startActiNoFinish(MemberInitActivity.class); break;
                 case R.id.mainFloatBtn : startActiNoFinish(WritePostActivity.class); break;
                 case R.id.userInfo_btn : startActiNoFinish(UserInfoActivity.class); break;

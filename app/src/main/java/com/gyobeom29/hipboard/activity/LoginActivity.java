@@ -19,7 +19,12 @@ import com.google.firebase.auth.ActionCodeSettings;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.gyobeom29.hipboard.FireBaseUser;
 import com.gyobeom29.hipboard.R;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends BasicActivity {
 
@@ -89,6 +94,8 @@ public class LoginActivity extends BasicActivity {
 //                                }else {
 //                                    Log.i(TAG, user.isEmailVerified() + "");
                                     startingToast("로그인 성공");
+                                    Log.i(TAG,"getToken : "  + FirebaseInstanceId.getInstance().getToken());
+                                FireBaseUser.signIn();
                                     goMain();
 //                                }
                             } else {

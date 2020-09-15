@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,11 +14,13 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -36,7 +39,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
@@ -67,7 +72,10 @@ public class WritePostActivity extends BasicActivity {
     DocumentReference documentReference;
     private int imageNumber;
     private int imagviewCount;
+    private String publisherName;
     private FirebaseDatabase firebaseDatabase;
+    private TextView loadingTextView;
+    private RelativeLayout activityWriteLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,16 +84,20 @@ public class WritePostActivity extends BasicActivity {
 
         setActionBarTitle("게시글 작성");
         user = FirebaseAuth.getInstance().getCurrentUser();
-       layout = findViewById(R.id.contentsLayout);
+        layout = findViewById(R.id.contentsLayout);
         findViewById(R.id.checkBtn).setOnClickListener(onClickListener);
         findViewById(R.id.writePostImagBtn).setOnClickListener(onClickListener);
         findViewById(R.id.writePostVideoBtn).setOnClickListener(onClickListener);
         findViewById(R.id.imageModify).setOnClickListener(onClickListener);
         findViewById(R.id.videoModify).setOnClickListener(onClickListener);
         findViewById(R.id.deleteBtn).setOnClickListener(onClickListener);
+        activityWriteLayout = findViewById(R.id.activity_write_post_layout);
+        loadingTextView = findViewById(R.id.LoadingSTextView);
+        loadingTextView.append("\n동영상을 여러개 올리 시는 경우 \n잠시동안 안나올 수 있습니다.....");
         loaderLayout = findViewById(R.id.loaderLayout);
         cardLayout = findViewById(R.id.cardLayout);
         cardLayout.setOnClickListener(onClickListener);
+        getName(user.getUid());
         postInfo = getIntent().getParcelableExtra("postInfo");
         if(postInfo != null){
             updateInit();
@@ -102,6 +114,7 @@ public class WritePostActivity extends BasicActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.checkBtn:
+
                     storageUpload();
                     break;
                 case R.id.writePostImagBtn:
@@ -134,6 +147,7 @@ public class WritePostActivity extends BasicActivity {
         final String title = ((EditText) findViewById(R.id.writePostTitleEd)).getText().toString();
         if (title.trim().length() > 0) {
             loaderLayout.setVisibility(View.VISIBLE);
+            activityWriteLayout.setEnabled(false);
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference();
             FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
@@ -154,6 +168,7 @@ public class WritePostActivity extends BasicActivity {
             }
             imagviewCount = 0;
             for (int i = 0; i < childCount; i++) {
+                writeLog("pathCount R : " + pathCount);
                 View view = layout.getChildAt(i);
                 if (view instanceof EditText) {
                     String text = ((EditText) view).getText().toString();
@@ -167,10 +182,11 @@ public class WritePostActivity extends BasicActivity {
                         writeLog("str : " + str);
                     }
                     String[] pathArray =  pathList.get(pathCount).split("\\.");
+                    writeLog("pathArray : " + pathArray);
                     String type = pathArray[pathArray.length-1];
                     if(postInfo!=null){
                         if(type.indexOf('?') >0)
-                        type = type.substring(0,type.indexOf("?"));
+                            type = type.substring(0,type.indexOf("?"));
                     }
                     String documentId = documentReference.getId();
                     if(postInfo != null)
@@ -179,7 +195,7 @@ public class WritePostActivity extends BasicActivity {
                     for (int j=0; j < updatePathList.size();j++){
                         if(updatePathList.get(j).equals(pathList.get(pathCount))){
                             isEquals = true;
-                           break;
+                            break;
                         }else{
                             isEquals = false;
                         }
@@ -212,7 +228,7 @@ public class WritePostActivity extends BasicActivity {
                                             writeLog("successCount : " + successCount);
                                             successCount++;
                                             writeLog("imageViewCount : " + imagviewCount);
-                                            if (pathCount == imagviewCount) {
+                                            if (pathCount == successCount) {
                                                 // 완료
                                                 for (String str : contentList) {
                                                     writeLog("contentList : " + str);
@@ -225,7 +241,7 @@ public class WritePostActivity extends BasicActivity {
                                                     likeC = postInfo.getLikeCount();
                                                     create = postInfo.getCreateAt();
                                                 }
-                                                PostInfo postInfos = new PostInfo(title, contentList, user.getUid(), vies,likeC,create);
+                                                PostInfo postInfos = new PostInfo(title, contentList, user.getUid(), vies,likeC,create,publisherName);
                                                 writeLog(postInfos.toString());
                                                 storeUpload(documentReference, postInfos);
                                             }
@@ -235,6 +251,7 @@ public class WritePostActivity extends BasicActivity {
                                         public void onFailure(@NonNull Exception e) {
                                             writeLog(e.toString());
                                             loaderLayout.setVisibility(View.GONE);
+                                            activityWriteLayout.setEnabled(true);
                                             e.printStackTrace();
                                         }
                                     });
@@ -251,7 +268,7 @@ public class WritePostActivity extends BasicActivity {
                         for (String strs : contentList) {
                             writeLog("strs : " + strs);
                         }
-                        PostInfo postInfos = new PostInfo(title, contentList, user.getUid(), views, likeCount, createAt);
+                        PostInfo postInfos = new PostInfo(title, contentList, user.getUid(), views, likeCount, createAt,publisherName);
                         writeLog(postInfos.toString());
                         storeUpload(documentReference, postInfos);
                     }
@@ -262,7 +279,7 @@ public class WritePostActivity extends BasicActivity {
                 for (String strs : contentList) {
                     writeLog("strs : " + strs);
                 }
-                PostInfo postInfos = new PostInfo(title, contentList, user.getUid(),views,likeCount,createAt);
+                PostInfo postInfos = new PostInfo(title, contentList, user.getUid(),views,likeCount,createAt,publisherName);
                 writeLog(postInfos.toString());
                 storeUpload(documentReference, postInfos);
             }
@@ -279,6 +296,7 @@ public class WritePostActivity extends BasicActivity {
                     public void onSuccess(Void aVoid) {
                         Log.d(TAG, "DocumentSnapshot successfully written!");
                         loaderLayout.setVisibility(View.GONE);
+                        activityWriteLayout.setEnabled(true);
                         finish();
                     }
                 })
@@ -287,6 +305,7 @@ public class WritePostActivity extends BasicActivity {
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "Error writing document", e);
                         loaderLayout.setVisibility(View.GONE);
+                        activityWriteLayout.setEnabled(true);
                     }
                 });
 
@@ -458,6 +477,22 @@ public class WritePostActivity extends BasicActivity {
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         PlayerView playerView = (PlayerView) inflater.inflate(R.layout.view_content_player,null,false);
         return playerView;
+    }
+
+    private void getName(String publisher){
+        FirebaseFirestore.getInstance().collection("users").document(publisher).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if(documentSnapshot.exists()){
+                    publisherName = documentSnapshot.get("name").toString();
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                writeLog("getNamesError : " + e.toString());
+            }
+        });
     }
 
 }

@@ -12,7 +12,6 @@ public class MemberInfo {
 
     private String photoUrl;
 
-
     public MemberInfo(String name , String phone , String birth , String address, String photoUrl){
         this.name = name;
         this.phone = phone;
@@ -59,6 +58,5 @@ public class MemberInfo {
 
     public void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
     public String getPhotoUrl(){return photoUrl;}
-
 
 }

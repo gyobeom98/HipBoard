@@ -16,14 +16,16 @@ public class PostInfo implements Parcelable {
     private long views;
     private long likeCount;
     private Date createAt;
+    private String publisherName;
 
-    public PostInfo(String title, List<String> contents, String publisher, long views, long likeCount, Date createAt) {
+    public PostInfo(String title, List<String> contents, String publisher, long views, long likeCount, Date createAt, String publisherName) {
         this.title = title;
         this.contents = contents;
         this.publisher = publisher;
         this.views = views;
         this.likeCount = likeCount;
         this.createAt = createAt;
+        this.publisherName = publisherName;
     }
 
     protected PostInfo(Parcel in) {
@@ -33,6 +35,7 @@ public class PostInfo implements Parcelable {
         publisher = in.readString();
         views = in.readLong();
         likeCount = in.readLong();
+        publisherName = in.readString();
     }
 
     @Override
@@ -43,6 +46,7 @@ public class PostInfo implements Parcelable {
         dest.writeString(publisher);
         dest.writeLong(views);
         dest.writeLong(likeCount);
+        dest.writeString(publisherName);
     }
 
     @Override
@@ -118,15 +122,25 @@ public class PostInfo implements Parcelable {
         this.documentId = documentId;
     }
 
+    public String getPublisherName() {
+        return publisherName;
+    }
+
+    public void setPublisherName(String publisherName) {
+        this.publisherName = publisherName;
+    }
+
     @Override
     public String toString() {
         return "PostInfo{" +
-                "title='" + title + '\'' +
+                "documentId='" + documentId + '\'' +
+                ", title='" + title + '\'' +
                 ", contents=" + contents +
                 ", publisher='" + publisher + '\'' +
                 ", views=" + views +
                 ", likeCount=" + likeCount +
                 ", createAt=" + createAt +
+                ", publisherName='" + publisherName + '\'' +
                 '}';
     }
 }

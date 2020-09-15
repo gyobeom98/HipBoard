@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.gyobeom29.hipboard.R;
 
 import java.util.regex.Pattern;
@@ -65,7 +66,7 @@ public class SignUpActivity extends BasicActivity {
         String passwordCheck = ((EditText) findViewById(R.id.passwordCheckEditText)).getText().toString();
         if (email.length() > 0 && password.length() > 0 && passwordCheck.length() > 0) {
             if(Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                if (Pattern.matches("((?=.*[a-z])(?=.*[0-9]).{8,20})",password) && password.equals(passwordCheck)) {
+//                if (Pattern.matches("((?=.*[a-z])(?=.*[0-9]).{8,20})",password) && password.equals(passwordCheck)) {
                     loaderLayout.setVisibility(View.VISIBLE);
                     mAuth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -76,6 +77,8 @@ public class SignUpActivity extends BasicActivity {
                                         // Sign in success, update UI with the signed-in user's information
                                         startingToast("회원가입을 성공 했습니다.");
                                         Log.d(TAG, "createUserWithEmail:success");
+                                        Log.i(TAG,mAuth.getUid());
+                                        
                                         mAuth.signOut();
                                         ((EditText) findViewById(R.id.passwordCheckEditText)).setText("");
                                         ((EditText) findViewById(R.id.passwordEditText)).setText("");
@@ -91,12 +94,12 @@ public class SignUpActivity extends BasicActivity {
                                     // ...
                                 }
                             });
-                } else {
-                    startingToast("비밀번호가 일치 하지 않습니다.");
-                    writeLog(password);
-                    writeLog(passwordCheck);
-
-                }
+//                } else {
+//                    startingToast("비밀번호가 일치 하지 않거나 규칙에 맞지 않는 비밀번호 입니다.");
+//                    writeLog(password);
+//                    writeLog(passwordCheck);
+//
+//                }
             }else{
                 startingToast("이메일을 다시 확인 해주세요");
             }

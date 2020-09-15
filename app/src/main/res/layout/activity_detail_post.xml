@@ -124,6 +124,7 @@
     </LinearLayout>
 
         <TextView
+            android:paddingLeft="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="댓글"
@@ -131,7 +132,7 @@
             android:textStyle="bold"/>
 
         <LinearLayout
-            android:padding="15dp"
+            android:padding="10dp"
             android:id="@+id/comment_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -147,8 +148,12 @@
             <EditText
                 android:id="@+id/posts_comment"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
+                android:layout_height="90dp"
+                android:maxLines="5"
+                android:gravity="top"
+                android:ems="5"
+                android:background="@drawable/comment_edit_shape"
+                />
             <Button
                 android:id="@+id/posts_comment_btn"
                 android:layout_width="match_parent"
@@ -156,12 +161,9 @@
                 android:textSize="20sp"
                 android:text="댓글 작성"
                 />
-
         </LinearLayout>
 
     </LinearLayout>
-
-
 
 
 </ScrollView>

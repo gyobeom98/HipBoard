@@ -7,4 +7,8 @@
     <color name="colorWhite">#ffffff</color>
     <color name="colorBack">#B28F8D8D</color>
     <color name="colorGreenGray">#697B63</color>
+    <color name="colorToolbar">#1E2323</color>
+    <color name="colorBackTwo">#9958715D</color>
+    <color name="colorLGray">#E1E1E1</color>
+
 </resources>
