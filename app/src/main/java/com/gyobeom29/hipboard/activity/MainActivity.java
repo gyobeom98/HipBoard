@@ -60,12 +60,12 @@ public class MainActivity extends BasicActivity {
         mAuth = FirebaseAuth.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
         recyclerView = findViewById(R.id.mainRecyclerView);
-        findViewById(R.id.logoutButton).setOnClickListener(onClickListener);
         findViewById(R.id.member_in_it_btn).setOnClickListener(onClickListener);
         findViewById(R.id.mainFloatBtn).setOnClickListener(onClickListener);
         findViewById(R.id.userInfo_btn).setOnClickListener(onClickListener);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this,RecyclerView.VERTICAL,false));
+        setNavigation();
 
     }
 
@@ -73,14 +73,11 @@ public class MainActivity extends BasicActivity {
     protected void onResume() {
         super.onResume();
         mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if(user == null){
-            findViewById(R.id.logoutButton).setVisibility(View.GONE);
             findViewById(R.id.member_in_it_btn).setVisibility(View.GONE);
             startActiNoFinish(SignUpActivity.class);
         }else{
-            findViewById(R.id.logoutButton).setVisibility(View.VISIBLE);
             findViewById(R.id.member_in_it_btn).setVisibility(View.VISIBLE);
             Log.e("UId" , user.getUid());
             firestore = FirebaseFirestore.getInstance();
@@ -118,20 +115,20 @@ public class MainActivity extends BasicActivity {
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
-                                        Log.d(TAG, document.getId() + " => " + document.getData());
-                                        Log.i("documentId", document.getId());
-                                        String documentId = document.getId();
-                                        String title = document.getData().get("title").toString();
-                                        ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
-                                        String publisher = document.getData().get("publisher").toString();
-                                        Date createAt = new Date(document.getDate("createAt").getTime());
-                                        long views = (Long) document.getData().get("views");
-                                        long likeCnt = (long) document.getData().get("likeCount");
-                                        String publisherName = document.getData().get("publisherName").toString();
-                                        PostInfo info = new PostInfo(title, contents, publisher, views, likeCnt, createAt,publisherName);
-                                        info.setDocumentId(documentId);
-                                        postList.add(info);
-                                        writeLog(info.toString());
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                    Log.i("documentId", document.getId());
+                                    String documentId = document.getId();
+                                    String title = document.getData().get("title").toString();
+                                    ArrayList<String> contents = (ArrayList<String>) document.getData().get("contents");
+                                    String publisher = document.getData().get("publisher").toString();
+                                    Date createAt = new Date(document.getDate("createAt").getTime());
+                                    long views = (Long) document.getData().get("views");
+                                    long likeCnt = (long) document.getData().get("likeCount");
+                                    String publisherName = document.getData().get("publisherName").toString();
+                                    PostInfo info = new PostInfo(title, contents, publisher, views, likeCnt, createAt,publisherName);
+                                    info.setDocumentId(documentId);
+                                    postList.add(info);
+                                    writeLog(info.toString());
 
                                 }
                                 mainPostAdapter = new MainPostAdapter(postList,MainActivity.this);
@@ -151,10 +148,6 @@ public class MainActivity extends BasicActivity {
         @Override
         public void onClick(View v) {
             switch (v.getId()){
-                case R.id.logoutButton :
-                    FireBaseUser.signOut();
-                    mAuth.signOut();
-                    startActiNoFinish(SignUpActivity.class); break;
                 case R.id.member_in_it_btn : startActiNoFinish(MemberInitActivity.class); break;
                 case R.id.mainFloatBtn : startActiNoFinish(WritePostActivity.class); break;
                 case R.id.userInfo_btn : startActiNoFinish(UserInfoActivity.class); break;
@@ -198,7 +191,7 @@ public class MainActivity extends BasicActivity {
         alBuilder.setPositiveButton("종료", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                 MainActivity.super.onBackPressed();
+                MainActivity.super.onBackPressed();
             }
         });
         alBuilder.create().show();

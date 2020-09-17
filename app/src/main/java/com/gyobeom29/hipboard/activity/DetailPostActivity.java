@@ -2,7 +2,6 @@ package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,15 +20,7 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
-import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -54,13 +44,11 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.gyobeom29.hipboard.CheckImageVideo;
 import com.gyobeom29.hipboard.Comment;
 import com.gyobeom29.hipboard.FirebasePushMessage;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -82,7 +70,7 @@ public class DetailPostActivity extends BasicActivity {
     private FirebaseStorage storage;
     private ArrayList<String> imageNames;
     private long views;
-    private ImageView menuImageView;
+    private ImageView menuImageView, likeImageView;
     private String publusherName;
     private TextView titleTextView , detailTextView, viewsTextView, dateTextView, likeCountTextView,publisherTextView;
     private EditText postsCommentEditText;
@@ -148,6 +136,9 @@ public class DetailPostActivity extends BasicActivity {
 
 
     private void init(){
+        setNavigation();
+
+        likeImageView = findViewById(R.id.detail_post_likeImageView);
         commentLayout = findViewById(R.id.comment_layout);
         postsCommentEditText = findViewById(R.id.posts_comment);
         publisherTextView = findViewById(R.id.detail_post_publisher);
@@ -159,6 +150,8 @@ public class DetailPostActivity extends BasicActivity {
         likeCountTextView = findViewById(R.id.detail_post_likeCountTextView);
         contentLayout = findViewById(R.id.detail_post_contents_layout);
         findViewById(R.id.posts_comment_btn).setOnClickListener(onClickListener);
+        likeImageView.setOnClickListener(onClickListener);
+        writeLog("Selected : " +likeImageView.isSelected());
 
     }
 
@@ -177,6 +170,14 @@ public class DetailPostActivity extends BasicActivity {
                         commentUpload(new Comment(comment,user.getUid(),isWriter,new Date(),publusherName));
                     }
                     break;
+                case R.id.detail_post_likeImageView :
+                    if(likeImageView.isSelected()){
+                    likeImageView.setSelected(false);
+                    }else{
+                        likeImageView.setSelected(true);
+                    }
+                    updateUserPostLike();
+                    break;
             }
         }
     };
@@ -194,8 +195,11 @@ public class DetailPostActivity extends BasicActivity {
             public void onSuccess(Void aVoid) {
                 writeLog("comment 올리기 성공");
                 writeLog("Comment documentId : " + postInfo.getDocumentId());
-                if(!comment.isPostWriter())
+                if(!comment.isPostWriter()){
+                    writeLog("메시지 보내기 시작");
                     FirebasePushMessage.sendPush(postInfo,getApplicationContext());
+                }
+
                 loadContents(2);
             }
         });
@@ -247,6 +251,7 @@ public class DetailPostActivity extends BasicActivity {
                 players = new ArrayList<>();
                 documentId = idIntent.getStringExtra("documentId");
                 if(documentId!=null && documentId.length()>0){
+                    setLikeImageViewSelect();
                     writeLog("documentId : " + documentId);
                     firestore = FirebaseFirestore.getInstance();
                     DocumentReference df =  firestore.collection("posts").document(documentId);
@@ -268,7 +273,6 @@ public class DetailPostActivity extends BasicActivity {
                                         postInfo = new PostInfo(title,contents,publisher,views,likeCnt,createAt,publisherName);
                                         postInfo.setDocumentId(documentId);
 
-
                                         if(where==1) {
                                             views = (Long) document.getData().get("views");
                                             setActionBarTitle("게시글 : " + postInfo.getTitle());
@@ -287,12 +291,12 @@ public class DetailPostActivity extends BasicActivity {
                                         }
                                         if(postInfo.getPublisherName()!=null && postInfo.getPublisherName().length()>0){
                                             publisherTextView.setVisibility(View.VISIBLE);
-                                            publisherTextView.setText("작성자 : " + postInfo.getPublisherName());
+                                            publisherTextView.setText(postInfo.getPublisherName());
                                         }else{
                                             publisherTextView.setVisibility(View.GONE);
                                         }
                                         titleTextView.setText(title);
-                                        dateTextView.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(createAt));
+                                        dateTextView.setText(new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.getDefault()).format(createAt));
                                         writeLog("views : " + views);
                                         viewsTextView.setText("조회수 : " + views);
                                         likeCountTextView.setText(""+likeCnt);
@@ -334,10 +338,13 @@ public class DetailPostActivity extends BasicActivity {
                                                     player.getContentDuration();
                                                     players.add(player);
                                                     playerView.setPlayer(player);
+                                                    playerView.setPadding(0,100,0,0);
                                                     contentLayout.addView(playerView);
                                                     if(where == 2){
-                                                        if(playersPosition.size()>0 && videoCnt<=playersPosition.size()){
-                                                            player.seekTo(playersPosition.get(videoCnt));
+                                                        if(playersPosition!=null) {
+                                                            if (playersPosition.size() > 0 && videoCnt <= playersPosition.size()) {
+                                                                player.seekTo(playersPosition.get(videoCnt));
+                                                            }
                                                         }
                                                     }
                                                     videoCnt++;
@@ -346,6 +353,7 @@ public class DetailPostActivity extends BasicActivity {
                                                     contentImageView.setLayoutParams(layoutParams);
                                                     contentImageView.setAdjustViewBounds(true);
                                                     contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                                                    contentImageView.setPadding(0,100,0,0);
                                                     contentLayout.addView(contentImageView);
                                                     Glide.with(getApplicationContext()).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
                                                 }
@@ -402,8 +410,7 @@ public class DetailPostActivity extends BasicActivity {
                                             commentTimeTextView.setGravity(Gravity.RIGHT);
 
                                             Date wrDate = new Date(qds.getDate("writeDate").getTime());
-
-                                            commentTimeTextView.setText("작성일 : " +new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(wrDate));
+                                            commentTimeTextView.setText("작성일 : " +new SimpleDateFormat("yy-MM-dd HH:mm:ss", Locale.getDefault()).format(wrDate));
 
                                             innerTimeLayout.addView(commentTimeTextView);
 
@@ -526,6 +533,95 @@ public class DetailPostActivity extends BasicActivity {
 
     private void println(String msg){
         Log.i(TAG,msg);
+    }
+
+    private void updateUserPostLike(){
+        Map<String,Boolean> data = new HashMap<>();
+        if(likeImageView.isSelected()){
+            data.put("isLike",true);
+        }else{
+            data.put("isLike",false);
+        }
+        FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("likePost").document(documentId).set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                    if(task.isSuccessful()){
+                        writeLog("성공 !");
+                        likeCountUp();
+                    }
+            }
+        });
+    }
+
+    private void likeCountUp(){
+        FirebaseFirestore.getInstance().collection("posts").document(documentId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if(documentSnapshot.exists()){
+                    if(documentSnapshot.getData().get("likeCount")!=null){
+                        int likeCount = Integer.parseInt(documentSnapshot.getData().get("likeCount").toString());
+                        if(likeImageView.isSelected()){
+                            likeCount++;
+                        }else{
+                            likeCount--;
+                        }
+
+                        FirebaseFirestore.getInstance().collection("posts").document(documentId).update("likeCount",likeCount).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if(task.isSuccessful()){
+                                    writeLog("likeCount 올리기 성공");
+
+                                    FirebaseFirestore.getInstance().collection("posts").document(documentId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                            if(documentSnapshot.exists()){
+                                                if(documentSnapshot.getData().get("likeCount")!=null){
+                                                    int likeCount = Integer.parseInt(documentSnapshot.getData().get("likeCount").toString());
+                                                    likeCountTextView.setText(likeCount+"");
+                                                }
+                                            }
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+
+                                        }
+                                    });
+
+                                }
+                            }
+                        });
+                    }
+
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+    }
+
+    private void setLikeImageViewSelect(){
+        FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("likePost").document(documentId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                if(documentSnapshot.exists()){
+                    if(documentSnapshot.getBoolean("isLike") != null){
+                       likeImageView.setSelected(documentSnapshot.getBoolean("isLike"));
+                    }
+                }
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
     }
 
 

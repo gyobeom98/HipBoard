@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 
-public class CameraActivity extends BasicActivity {
+public class CameraActivity extends NoActiveBasicActivity {
 
     /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a

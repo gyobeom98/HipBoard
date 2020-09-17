@@ -10,5 +10,9 @@
     <color name="colorToolbar">#1E2323</color>
     <color name="colorBackTwo">#9958715D</color>
     <color name="colorLGray">#E1E1E1</color>
+    <color name="colorTextGray">#DCDCDC</color>
+    <color name="colorIvory">#FFBF00</color>
+    <color name="colorPink">#F8ABD5</color>
+    <color name="colorFavorite">#42B867</color>
 
 </resources>

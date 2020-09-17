@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -41,13 +39,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.gyobeom29.hipboard.CheckImageVideo;
 import com.gyobeom29.hipboard.PostInfo;
 import com.gyobeom29.hipboard.R;
+import com.gyobeom29.hipboard.WritePostImageViewTag;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -83,6 +82,7 @@ public class WritePostActivity extends BasicActivity {
         setContentView(R.layout.activity_write_post);
 
         setActionBarTitle("게시글 작성");
+        setNavigation();
         user = FirebaseAuth.getInstance().getCurrentUser();
         layout = findViewById(R.id.contentsLayout);
         findViewById(R.id.checkBtn).setOnClickListener(onClickListener);

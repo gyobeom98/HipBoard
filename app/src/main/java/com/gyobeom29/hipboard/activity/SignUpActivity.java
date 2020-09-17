@@ -22,7 +22,7 @@ import com.gyobeom29.hipboard.R;
 
 import java.util.regex.Pattern;
 
-public class SignUpActivity extends BasicActivity {
+public class SignUpActivity extends NoActiveBasicActivity {
 
     private static final String TAG = "SignUpActivity";
 

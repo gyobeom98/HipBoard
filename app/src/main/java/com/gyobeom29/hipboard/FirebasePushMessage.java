@@ -138,11 +138,13 @@ public class FirebasePushMessage {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                writeLog("publisher : "+postInfo.getPublisher());
                 FirebaseFirestore.getInstance().collection("users").document(postInfo.getPublisher()).collection("token").document("userFCMToken").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if(documentSnapshot.exists()){
                             if(documentSnapshot.getData().get("user_fcm_token")!=null) {
+                                writeLog("유저 토큰 : " + documentSnapshot.getData().get("user_fcm_token").toString());
                                 writeLog("유저 토큰 있음");
                                 String fcmToken = documentSnapshot.getData().get("user_fcm_token").toString();
                                 writeLog(fcmToken);

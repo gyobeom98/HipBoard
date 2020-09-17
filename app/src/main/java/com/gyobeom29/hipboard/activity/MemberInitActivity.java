@@ -45,7 +45,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MemberInitActivity extends BasicActivity {
+public class MemberInitActivity extends NoActiveBasicActivity {
 
     private static final int REQUEST_CODE_MEMBER_INIT_ACTIVITY = 0;
 

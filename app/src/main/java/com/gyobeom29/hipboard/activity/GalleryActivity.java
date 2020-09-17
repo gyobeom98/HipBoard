@@ -22,7 +22,7 @@ import com.gyobeom29.hipboard.adapter.GalleryAdapter;
 
 import java.util.ArrayList;
 
-public class GalleryActivity extends BasicActivity {
+public class GalleryActivity extends NoActiveBasicActivity {
 
     private RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;

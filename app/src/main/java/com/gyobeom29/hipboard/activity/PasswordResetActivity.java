@@ -14,7 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.gyobeom29.hipboard.R;
 
-public class PasswordResetActivity extends BasicActivity {
+public class PasswordResetActivity extends NoActiveBasicActivity {
 
     private static final String TAG = "PasswordResetActivity";
 

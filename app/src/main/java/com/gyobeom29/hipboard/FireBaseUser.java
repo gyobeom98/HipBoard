@@ -55,6 +55,8 @@ public class FireBaseUser {
                         FirebaseInstanceId.getInstance().deleteInstanceId();
                         String token = FirebaseInstanceId.getInstance().getToken();
                         String Token = FirebaseInstanceId.getInstance().getToken();
+                        writeLog("token 삭제 : " + Token);
+                        writeLog("token 삭제 : " + token);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

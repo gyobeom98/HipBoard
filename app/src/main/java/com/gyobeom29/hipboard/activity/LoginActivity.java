@@ -26,7 +26,7 @@ import com.gyobeom29.hipboard.R;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoginActivity extends BasicActivity {
+public class LoginActivity extends NoActiveBasicActivity {
 
     private static final String TAG = "LoginActivity";
 

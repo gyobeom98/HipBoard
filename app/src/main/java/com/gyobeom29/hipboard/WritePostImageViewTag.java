@@ -1,4 +1,4 @@
-package com.gyobeom29.hipboard.activity;
+package com.gyobeom29.hipboard;
 
 public class WritePostImageViewTag {
 
