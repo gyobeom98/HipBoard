@@ -918,8 +918,14 @@ public class Camera2BasicFragment extends Fragment
                     mBackgroundHandler);
             // After this, the camera will go back to the normal state of preview.
             mState = STATE_PREVIEW;
-            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
-                    mBackgroundHandler);
+            Log.i("Camera2BasicFragment","mPreviewRequest : "+mPreviewRequest);
+            Log.i("Camera2BasicFragment","mCaptureCallback : "+mCaptureCallback);
+            Log.i("Camera2BasicFragment","mBackgroundHandler : "+mBackgroundHandler);
+            Log.i("Camera2BasicFragment","mCaptureSession : "+mCaptureSession);
+            if(mCaptureSession!=null){
+                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
+                        mBackgroundHandler);
+            }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }

@@ -104,7 +104,8 @@ public class MemberInitActivity extends NoActiveBasicActivity {
             ((EditText) findViewById(R.id.member_phoneEditText)).setText(myMemberInfo.getPhone());
             ((EditText) findViewById(R.id.member_birthEditText)).setText(myMemberInfo.getBirth());
             ((EditText) findViewById(R.id.member_addressEditText)).setText(myMemberInfo.getAddress());
-            Glide.with(this).load(myMemberInfo.getPhotoUrl()).centerCrop().override(500).into(profileImageView);
+            int randLoad = (int)Math.random()+1*10;
+            Glide.with(this).load(myMemberInfo.getPhotoUrl()+"?v="+randLoad).centerCrop().override(500).into(profileImageView);
             showHome();
             loadingTextView = findViewById(R.id.LoadingSTextView);
             loadingTextView.append("\n프로필 이미지 변경시 적용 까지 시간이 걸립니다.");
@@ -324,7 +325,6 @@ public class MemberInitActivity extends NoActiveBasicActivity {
                 if(resultCode == Activity.RESULT_OK){
                     profilePath = data.getStringExtra("profilePath");
                     writeLog("profilePath : " + profilePath);
-
                     Glide.with(this).load(profilePath).centerCrop().override(500).into(profileImageView);
                 }
 

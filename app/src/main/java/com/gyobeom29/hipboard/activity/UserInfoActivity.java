@@ -105,7 +105,12 @@ public class UserInfoActivity extends BasicActivity {
         goToDeleteUserLayout = findViewById(R.id.go_to_delete_user);
 
         pushSwitch = findViewById(R.id.switch_push);
-        pushSwitch.setChecked(SettingService.setting.isPushOn());
+        if(SettingService.setting == null){
+            pushSwitch.setChecked(true);
+        }else{
+            pushSwitch.setChecked(SettingService.setting.isPushOn());
+        }
+
 
         goToUpdateMyInfoLayout.setOnClickListener(onClickListener);
         goToMyPostLayout.setOnClickListener(onClickListener);
