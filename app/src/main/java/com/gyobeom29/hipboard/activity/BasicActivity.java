@@ -4,26 +4,18 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
-import android.transition.Explode;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -40,11 +32,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.gyobeom29.hipboard.FireBaseUser;
-import com.gyobeom29.hipboard.MemberInfo;
 import com.gyobeom29.hipboard.R;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 
 public class BasicActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -70,7 +58,7 @@ public class BasicActivity extends AppCompatActivity implements NavigationView.O
     }
 
     public void showHome(){
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if(getSupportActionBar() != null)getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -128,9 +116,13 @@ public class BasicActivity extends AppCompatActivity implements NavigationView.O
                 @Override
                 public void onSuccess(DocumentSnapshot documentSnapshot) {
                     if(documentSnapshot.exists()){
-                        basicAcUserName = documentSnapshot.getData().get("name").toString();
-                        basicAcprofilePath = documentSnapshot.getData().get("photoUrl").toString();
-                        setNavigationUserInfo();
+                        if(documentSnapshot.getData()!=null) {
+                            if (documentSnapshot.getData().get("name") != null)
+                                basicAcUserName = documentSnapshot.getData().get("name").toString();
+                            if (documentSnapshot.getData().get("photoUrl") != null)
+                                basicAcprofilePath = documentSnapshot.getData().get("photoUrl").toString();
+                            setNavigationUserInfo();
+                        }
                     }
 
                 }
@@ -186,17 +178,9 @@ public class BasicActivity extends AppCompatActivity implements NavigationView.O
         Log.i(TAG,msg);
     }
 
-    private void getButton(){
-        testBtn = findViewById(R.id.nav_logOut_Btn);
-    }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        switch (item.getItemId()){
-            case android.R.id.home : finish(); break;
-        }
-
+             finish();
         return super.onOptionsItemSelected(item);
     }
 

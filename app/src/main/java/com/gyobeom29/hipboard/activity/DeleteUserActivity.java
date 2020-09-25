@@ -1,7 +1,6 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +10,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -47,8 +45,6 @@ public class DeleteUserActivity extends NoActiveBasicActivity {
     private String userUid;
 
     private RelativeLayout loaderLayout;
-
-    private ArrayList<String> writeCommentDocumentIdList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +117,6 @@ public class DeleteUserActivity extends NoActiveBasicActivity {
     }
 
     private void getUserComment(){
-        writeCommentDocumentIdList = new ArrayList<>();
         FirebaseFirestore.getInstance().collection("posts").get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
@@ -259,11 +254,6 @@ public class DeleteUserActivity extends NoActiveBasicActivity {
         FirebaseStorage.getInstance().getReference(documentId).delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
-
-                }else{
-
-                }
                 deletePost(documentId);
             }
         });

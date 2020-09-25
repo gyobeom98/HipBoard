@@ -13,7 +13,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -23,12 +22,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.gyobeom29.hipboard.R;
 
+
 public class SignUpActivity extends NoActiveBasicActivity {
 
     private static final String TAG = "SignUpActivity";
 
     public static Activity instance;
-
     FirebaseAuth mAuth;
 
     RelativeLayout loaderLayout;
@@ -40,9 +39,7 @@ public class SignUpActivity extends NoActiveBasicActivity {
         setContentView(R.layout.activity_sign_up);
 
         mAuth = FirebaseAuth.getInstance();
-
         instance = this;
-
         setActionBarTitle("회원가입");
 
         findViewById(R.id.signUpButton).setOnClickListener(onClickListener);
@@ -62,7 +59,7 @@ public class SignUpActivity extends NoActiveBasicActivity {
                     break;
                 case R.id.go_to_loginBtn:
                     hideKeyBoard();
-                    startNoFinishActivity(LoginActivity.class);
+                    startLogInActivity();
                     break;
             }
         }
@@ -75,7 +72,7 @@ public class SignUpActivity extends NoActiveBasicActivity {
         String passwordCheck = ((EditText) findViewById(R.id.passwordCheckEditText)).getText().toString();
         if (email.length() > 0 && password.length() > 0 && passwordCheck.length() > 0) {
             if(Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-//                if (Pattern.matches("((?=.*[a-z])(?=.*[0-9]).{8,20})",password) && password.equals(passwordCheck)) {
+                if (password.equals(passwordCheck) && password.length()>=6) {
                     loaderLayout.setVisibility(View.VISIBLE);
                     mAuth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -86,12 +83,11 @@ public class SignUpActivity extends NoActiveBasicActivity {
                                         // Sign in success, update UI with the signed-in user's information
                                         startingSnackBar("회원 가입을 성공 하셨습니다.");
                                         Log.d(TAG, "createUserWithEmail:success");
-                                        Log.i(TAG,mAuth.getUid());
                                         mAuth.signOut();
                                         ((EditText) findViewById(R.id.passwordCheckEditText)).setText("");
                                         ((EditText) findViewById(R.id.passwordEditText)).setText("");
                                         ((EditText) findViewById(R.id.emailEditText)).setText("");
-                                        startNoFinishActivity(LoginActivity.class);
+                                        startLogInActivity();
 
 //                            updateUI(user);
                                     } else {
@@ -103,12 +99,17 @@ public class SignUpActivity extends NoActiveBasicActivity {
                                     // ...
                                 }
                             });
-//                } else {
-//                    startingSnackBar("비밀번호가 일치 하지 않거나 규칙에 맞지 않는 비밀번호 입니다.");
-//                    writeLog(password);
-//                    writeLog(passwordCheck);
-//
-//                }
+                } else {
+
+                    if(password.length()<6){
+                        startingSnackBar("비밀 번호는 6자 이상입니다.");
+                    }else{
+                        startingSnackBar("비밀번호가 일치 하지 않습니다.");
+                    }
+                    writeLog(password);
+                    writeLog(passwordCheck);
+
+                }
             }else{
                 startingSnackBar("이메일을 다시 확인 하여 주세요");
             }
@@ -120,7 +121,7 @@ public class SignUpActivity extends NoActiveBasicActivity {
             }else if(password.length()<=0){
                 startingSnackBar("비밀번호를 입력하지 않았습니다. \n 비밀번호를 입력 해주세요");
                 ((EditText)findViewById(R.id.passwordEditText)).requestFocus();
-            }else if(passwordCheck.length()<=0){
+            }else{
                 startingSnackBar("비밀번호 확인이 되지 않았습니다.\n 비밀번호를 다시 확인 해주세요");
                 ((EditText)findViewById(R.id.passwordCheckEditText)).requestFocus();
             }
@@ -130,8 +131,8 @@ public class SignUpActivity extends NoActiveBasicActivity {
     }
 
 
-    private void startNoFinishActivity(Class c){
-        Intent intent = new Intent(SignUpActivity.this, c);
+    private void startLogInActivity(){
+        Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
         startActivity(intent);
     }
 

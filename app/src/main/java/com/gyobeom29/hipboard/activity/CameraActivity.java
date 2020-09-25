@@ -25,13 +25,15 @@ import android.media.ImageReader;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.gyobeom29.hipboard.R;
 import com.gyobeom29.hipboard.fragment.Camera2BasicFragment;
 
@@ -104,7 +106,7 @@ public class CameraActivity extends NoActiveBasicActivity {
 
             }else{
                 ActivityCompat.requestPermissions(CameraActivity.this,new String[]{Manifest.permission.CAMERA},1);
-                startingToast("권한을 허용 해주세요");
+                startingSnackBar();
             }
         }
 
@@ -119,14 +121,10 @@ public class CameraActivity extends NoActiveBasicActivity {
     }
 
 
-    private void startingToast(String msg){
-        Toast.makeText(getApplicationContext(),msg,Toast.LENGTH_SHORT).show();
+
+    private void startingSnackBar(){
+        Snackbar.make((TextView)new TextView(getApplicationContext()),"권한을 허용 해주세요", BaseTransientBottomBar.LENGTH_SHORT).show();
     }
 
-    private void startActi(Class c){
-        Intent intent = new Intent(this,c);
-        startActivity(intent);
-        finish();
-    }
 
 }

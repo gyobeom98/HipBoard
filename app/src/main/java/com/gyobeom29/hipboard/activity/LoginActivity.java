@@ -94,28 +94,28 @@ public class LoginActivity extends NoActiveBasicActivity {
                                 // Sign in success, update UI with the signed-in user's information
                                 final FirebaseUser user = mAuth.getCurrentUser();
                                 Log.i(TAG,user.isEmailVerified()+"");
-//                                if(!user.isEmailVerified()){
-//                                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
-//                                    builder.setTitle("이메일 인증 계정").setMessage("이메일 인증 계정이 아닙니다.\n이메일 인증을 하시겠습니까?");
-//                                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-//                                        @Override
-//                                        public void onClick(DialogInterface dialog, int which) {
-//                                            emailCertification(email,user);
-//                                            startingSnackBar("메일로 인증 링크가 갔습니다. 인증 링크를 클릭 후 다시 한번 로그인 버튼을 눌러주세요");
-//                                        }
-//                                    });
-//                                    builder.setNegativeButton("취소",null);
-//                                    AlertDialog alertDialog = builder.create();
-//                                    alertDialog.show();
-//                                    user.sendEmailVerification();
-//                                }else {
-//                                    Log.i(TAG, user.isEmailVerified() + "");
+                                if(!user.isEmailVerified()){
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                                    builder.setTitle("이메일 인증 계정").setMessage("이메일 인증 계정이 아닙니다.\n이메일 인증을 하시겠습니까?");
+                                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            emailCertification(email,user);
+                                            startingSnackBar("메일로 인증 링크가 갔습니다. 인증 링크를 클릭 후 다시 한번 로그인 버튼을 눌러주세요");
+                                        }
+                                    });
+                                    builder.setNegativeButton("취소",null);
+                                    AlertDialog alertDialog = builder.create();
+                                    alertDialog.show();
+                                    user.sendEmailVerification();
+                                }else {
+                                    Log.i(TAG, user.isEmailVerified() + "");
                                     startingSnackBar("로그인 성공");
                                     Log.i(TAG,"getToken : "  + FirebaseInstanceId.getInstance().getToken());
                                     FireBaseUser.signIn();
                                     goMainOrMemberInit(FirebaseAuth.getInstance().getCurrentUser());
 
-//                                }
+                                }
                             } else {
                                 // If sign in fails, display a message to the user.
                                 if(task.getException()!=null) {

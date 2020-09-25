@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.gyobeom29.hipboard.R;
 
-public class LoadingActivity extends AppCompatActivity {
+public class LoadingActivity extends NoActiveBasicActivity {
 
     TextView loadingTextView;
 
