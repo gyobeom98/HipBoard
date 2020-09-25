@@ -1,11 +1,12 @@
 package com.gyobeom29.hipboard;
 
 import android.util.Log;
+import android.util.Patterns;
 
 public class CheckImageVideo {
 
     //확장자가 비디오인지 이미지인지 확인
-    static public Boolean isVideo(String path) {
+    public static Boolean isVideo(String path) {
         String extension = getExtension(path);
         Log.i("CheckImage", extension);
         if (extension.equals("mp4") || extension.equals("MP4") || extension.equals("MOV") || extension.equals("mov") || extension.equals("AVI") || extension.equals("avi") ||
@@ -21,9 +22,17 @@ public class CheckImageVideo {
     }
 
     //확장자 나누기
-    public static String getExtension(String url) {
+    private static String getExtension(String url) {
         return url.substring(url.lastIndexOf(".") + 1, url.indexOf('?'));
     }
 
-
+    public static boolean isImage(String path){
+        String extension = getExtension(path);
+        Log.i("CheckImage", extension);
+        if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png") || extension.equals("gif") || extension.equals("svg")){
+            return true;
+        }else{
+            return  false;
+        }
+    }
 }

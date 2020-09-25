@@ -14,5 +14,7 @@
     <color name="colorIvory">#FFBF00</color>
     <color name="colorPink">#F8ABD5</color>
     <color name="colorFavorite">#42B867</color>
+    <color name="colorMenuItemNoSelected">#329213</color>
+    <color name="colorBrightGray">#FaFaFa</color>
 
 </resources>

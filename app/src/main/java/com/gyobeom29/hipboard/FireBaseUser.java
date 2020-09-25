@@ -57,6 +57,7 @@ public class FireBaseUser {
                         String Token = FirebaseInstanceId.getInstance().getToken();
                         writeLog("token 삭제 : " + Token);
                         writeLog("token 삭제 : " + token);
+                        SettingService.setting = null;
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

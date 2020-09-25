@@ -18,6 +18,8 @@ public class PostInfo implements Parcelable {
     private Date createAt;
     private String publisherName;
 
+    public PostInfo() {}
+
     public PostInfo(String title, List<String> contents, String publisher, long views, long likeCount, Date createAt, String publisherName) {
         this.title = title;
         this.contents = contents;

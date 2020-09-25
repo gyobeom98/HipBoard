@@ -168,7 +168,6 @@ public class FirebasePushMessage {
     }
 
     private static void sendMessage(String uid,String documentId,Context context){
-
         Map<String,String> data = new HashMap<>();
         data.put("documentId",documentId);
         FirebaseFirestore.getInstance().collection("users").document(uid).collection("message").document("noReadMessage").set(data).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -185,33 +184,35 @@ public class FirebasePushMessage {
     }
 
 
+
+
     public static void getMessage(final Context context){
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if(user !=null){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("message").document("noReadMessage").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onSuccess(DocumentSnapshot ds) {
-                        if(ds.exists()){
-                            if( ds.getData().get("documentId")!=null){
-                                String message = ds.getData().get("documentId").toString();
-                                writeLog(message);
-                                MyNoti.showNoti(message,context);
-                                deleteMessage();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("message").document("noReadMessage").get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                        @RequiresApi(api = Build.VERSION_CODES.O)
+                        @Override
+                        public void onSuccess(DocumentSnapshot ds) {
+                            if(ds.exists()){
+                                if( ds.getData().get("documentId")!=null){
+                                    String message = ds.getData().get("documentId").toString();
+                                    writeLog(message);
+                                    MyNoti.showNoti(message,context);
+                                    deleteMessage();
+                                }
                             }
                         }
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
 
-                    }
-                });
-            }
-        }).start();
+                        }
+                    });
+                }
+            }).start();
 
         }
     }

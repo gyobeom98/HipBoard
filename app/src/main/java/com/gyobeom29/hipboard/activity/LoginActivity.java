@@ -1,10 +1,13 @@
 package com.gyobeom29.hipboard.activity;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -14,11 +17,17 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.ActionCodeSettings;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.gyobeom29.hipboard.FireBaseUser;
 import com.gyobeom29.hipboard.R;
@@ -37,10 +46,16 @@ public class LoginActivity extends NoActiveBasicActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        showHome();
+
         mAuth = FirebaseAuth.getInstance();
+
+        Log.i("LogInAc","auth Uid : " + mAuth.getUid());
 
         findViewById(R.id.loginBtn).setOnClickListener(onClickListener);
         findViewById(R.id.go_to_passwordResetBtn).setOnClickListener(onClickListener);
+
+
 
         setActionBarTitle("로그인");
 
@@ -52,9 +67,11 @@ public class LoginActivity extends NoActiveBasicActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.loginBtn :
+                    hideKeyBoard();
                     login();
                     break;
                 case R.id.go_to_passwordResetBtn :
+                    hideKeyBoard();
                     startActivity(PasswordResetActivity.class);
                     break;
 
@@ -84,7 +101,7 @@ public class LoginActivity extends NoActiveBasicActivity {
 //                                        @Override
 //                                        public void onClick(DialogInterface dialog, int which) {
 //                                            emailCertification(email,user);
-//                                            startingToast("메일로 인증 링크가 갔습니다. 인증 링크를 클릭 후 다시 한번 로그인 버튼을 눌러주세요");
+//                                            startingSnackBar("메일로 인증 링크가 갔습니다. 인증 링크를 클릭 후 다시 한번 로그인 버튼을 눌러주세요");
 //                                        }
 //                                    });
 //                                    builder.setNegativeButton("취소",null);
@@ -93,15 +110,16 @@ public class LoginActivity extends NoActiveBasicActivity {
 //                                    user.sendEmailVerification();
 //                                }else {
 //                                    Log.i(TAG, user.isEmailVerified() + "");
-                                    startingToast("로그인 성공");
+                                    startingSnackBar("로그인 성공");
                                     Log.i(TAG,"getToken : "  + FirebaseInstanceId.getInstance().getToken());
-                                FireBaseUser.signIn();
-                                    goMain();
+                                    FireBaseUser.signIn();
+                                    goMainOrMemberInit(FirebaseAuth.getInstance().getCurrentUser());
+
 //                                }
                             } else {
                                 // If sign in fails, display a message to the user.
                                 if(task.getException()!=null) {
-                                    startingToast(task.getException().toString());
+                                    startingSnackBar(task.getException().toString());
                                 }
 
                                 // ...
@@ -112,19 +130,28 @@ public class LoginActivity extends NoActiveBasicActivity {
                     });
 
         } else {
-            startingToast("입력하지 않은 값이 있습니다. \n이메일 또는 비밀번호를 입력 해주세요.");
+
+            if(email.length()<=0){
+                startingSnackBar("이메일을 입력하지 않았습니다. \n 이메일을 입력 해주세요");
+                ((EditText)findViewById(R.id.emailEditText)).requestFocus();
+            }else if(password.length()<=0){
+                startingSnackBar("비밀번호를 입력하지 않았습니다. \n 비밀번호를 입력 해주세요");
+                ((EditText)findViewById(R.id.passwordEditText)).requestFocus();
+            }
         }
     }
 
-    public void startingToast(String msg){
-        Toast.makeText(getApplicationContext(),msg, Toast.LENGTH_SHORT).show();
+
+    private void startingSnackBar(String msg){
+        Snackbar.make((Button)findViewById(R.id.loginBtn),msg, BaseTransientBottomBar.LENGTH_SHORT).show();
     }
 
     private void startActivity(Class c){
         Intent intent = new Intent(LoginActivity.this,c);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }
+
+
 
     private void goMain(){
         Intent intent = new Intent(LoginActivity.this,MainActivity.class);
@@ -134,6 +161,48 @@ public class LoginActivity extends NoActiveBasicActivity {
 
     private void emailCertification(String email,FirebaseUser user){
         user.sendEmailVerification();
+    }
+
+
+    private void hideKeyBoard(){
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if(((EditText) findViewById(R.id.emailEditText)).isFocused()){
+            imm.hideSoftInputFromWindow(((EditText)findViewById(R.id.emailEditText)).getWindowToken(), 0);
+        }else if(((EditText) findViewById(R.id.passwordEditText)).isFocused()){
+            imm.hideSoftInputFromWindow(((EditText)findViewById(R.id.passwordEditText)).getWindowToken(), 0);
+        }
+    }
+
+    private void goMainOrMemberInit(FirebaseUser user){
+        Log.i("LoginActivity","여기 옴");
+        Log.i("LoginActivity","user : " + user);
+        FirebaseFirestore.getInstance().collection("users").document(user.getUid()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                if(documentSnapshot.getData()!=null) {
+                    if (documentSnapshot.getData().get("name") == null) {
+                        startActivity(MemberInitActivity.class);
+                        SignUpActivity.instance.finish();
+                        finish();
+                    } else {
+                        goMain();
+                        SignUpActivity.instance.finish();
+                        finish();
+                    }
+                }else{
+                    startActivity(MemberInitActivity.class);
+                    finish();
+                }
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("LoginActivity","로그인성공 후 goMainOrOther 실패");
+            }
+        });
+
     }
 
 

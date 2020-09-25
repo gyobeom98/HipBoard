@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 
 public class GalleryActivity extends NoActiveBasicActivity {
 
+
+    private static final String TAG = "GalleryActivity";
     private RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;
 
@@ -57,7 +60,8 @@ public class GalleryActivity extends NoActiveBasicActivity {
         // use a linear layout manager
         recyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(),numberOfColumns));
 
-        mAdapter = new GalleryAdapter(getImagesPath(this),this);
+        mAdapter = new GalleryAdapter(getImagesPath(this),GalleryActivity.this);
+
         recyclerView.setAdapter(mAdapter);
 
     }
@@ -84,7 +88,11 @@ public class GalleryActivity extends NoActiveBasicActivity {
 
         while (cursor.moveToNext()){
             pathofImage = cursor.getString(column_index_data);
-            listOfAllImages.add(pathofImage);
+            String type = pathofImage.substring(pathofImage.lastIndexOf('.'),pathofImage.length());
+            if(!type.equals(".psd") && !type.equals(".ico")){
+                if(!pathofImage.contains("/storage/emulated/0/DraStic"))
+                    listOfAllImages.add(pathofImage);
+            }
         }
         return listOfAllImages;
     }

@@ -12,27 +12,35 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/hipboard_icon"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/hipboard_icon_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".activity.UserInfoActivity"></activity>
-        <activity android:name=".activity.DetailPostActivity" />
-        <activity android:name=".activity.WritePostActivity" />
-        <activity android:name=".activity.CameraActivity" />
-        <activity android:name=".activity.GalleryActivity" />
-        <activity android:name=".activity.MemberInitActivity" />
-        <activity android:name=".activity.LoginActivity" />
-        <activity android:name=".activity.SignUpActivity" />
-        <activity android:name=".activity.MainActivity">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".activity.LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activity.NewsListActivity" />
+        <activity android:name=".activity.DeleteUserActivity" />
+        <activity android:name=".activity.PostListActivity" />
+        <activity android:name=".activity.MyPostListActivity" />
+        <activity android:name=".activity.DetailNewsActivity" />
+        <activity android:name=".activity.UserInfoActivity" />
+        <activity android:name=".activity.DetailPostActivity" />
+        <activity android:name=".activity.WritePostActivity" />
+        <activity android:name=".activity.CameraActivity" />
+        <activity android:name=".activity.GalleryActivity" />
+        <activity android:name=".activity.MemberInitActivity" />
+        <activity android:name=".activity.LoginActivity" />
+        <activity android:name=".activity.PasswordResetActivity" />
+        <activity android:name=".activity.SignUpActivity" />
+        <activity android:name=".activity.MainActivity"/>
 
         <service
             android:name=".service.BoardFirebaseService"
@@ -45,12 +53,9 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@android:drawable/ic_menu_upload" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorAccent" />
-
-
     </application>
 
 </manifest>

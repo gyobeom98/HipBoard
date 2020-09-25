@@ -2,17 +2,24 @@ package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -33,6 +40,9 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
@@ -57,6 +67,8 @@ import java.util.Date;
 
 public class WritePostActivity extends BasicActivity {
 
+    private static final int IMAGE_PERMISSION_REQUST_CODE = 503;
+    private static final int VIDEO_PERMISSION_REQUST_CODE = 701;
     private final String TAG = "WritePostActivity";
     private FirebaseUser user;
     private ArrayList<String> pathList = new ArrayList<>();
@@ -76,26 +88,39 @@ public class WritePostActivity extends BasicActivity {
     private TextView loadingTextView;
     private RelativeLayout activityWriteLayout;
 
+    private FloatingActionButton addContentFab , imageFab, videoFab;
+    private Animation fabOpen , fabClose;
+
+    private boolean isFabOpen = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_write_post);
 
         setActionBarTitle("게시글 작성");
-        setNavigation();
+
+        init();
+
+    }
+
+    private void init(){
+
         user = FirebaseAuth.getInstance().getCurrentUser();
+
         layout = findViewById(R.id.contentsLayout);
-        findViewById(R.id.checkBtn).setOnClickListener(onClickListener);
-        findViewById(R.id.writePostImagBtn).setOnClickListener(onClickListener);
-        findViewById(R.id.writePostVideoBtn).setOnClickListener(onClickListener);
         findViewById(R.id.imageModify).setOnClickListener(onClickListener);
         findViewById(R.id.videoModify).setOnClickListener(onClickListener);
         findViewById(R.id.deleteBtn).setOnClickListener(onClickListener);
         activityWriteLayout = findViewById(R.id.activity_write_post_layout);
         loadingTextView = findViewById(R.id.LoadingSTextView);
-        loadingTextView.append("\n동영상을 여러개 올리 시는 경우 \n잠시동안 안나올 수 있습니다.....");
         loaderLayout = findViewById(R.id.loaderLayout);
         cardLayout = findViewById(R.id.cardLayout);
+
+        addToolBarView();
+
+        loadingTextView.append("\n동영상을 여러개 올리 시는 경우 \n잠시동안 안나올 수 있습니다.....");
+
         cardLayout.setOnClickListener(onClickListener);
         getName(user.getUid());
         postInfo = getIntent().getParcelableExtra("postInfo");
@@ -105,24 +130,46 @@ public class WritePostActivity extends BasicActivity {
             setActionBarTitle("게시글 수정 : " + postInfo.getTitle());
             postInfo.setCreateAt(new Date(getIntent().getLongExtra("createAt",0)));
         }
+        showHome();
 
+        fabOpen = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.write_post_fab_anim_open);
+        fabClose = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.write_post_fab_anim_close);
+
+        addContentFab = findViewById(R.id.add_content_floating_action_btn);
+        imageFab = findViewById(R.id.image_floating_action_btn);
+        videoFab = findViewById(R.id.video_floating_action_btn);
+
+        addContentFab.setOnClickListener(fabOnClickListener);
+        videoFab.setOnClickListener(fabOnClickListener);
+        imageFab.setOnClickListener(fabOnClickListener);
+
+    }
+
+    View.OnClickListener fabOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            switch (v.getId()){
+                case R.id.add_content_floating_action_btn : toggleFab(); break;
+                case R.id.image_floating_action_btn : toggleFab(); checkPermission("image"); break;
+                case R.id.video_floating_action_btn : toggleFab(); checkPermission("video"); break;
+            }
+
+
+        }
+    };
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
         @SuppressLint("ResourceAsColor")
         @Override
         public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.checkBtn:
-
-                    storageUpload();
-                    break;
-                case R.id.writePostImagBtn:
-                    startActiNoFinish(GalleryActivity.class, "image",101);
-                    break;
-                case R.id.writePostVideoBtn:
-                    startActiNoFinish(GalleryActivity.class, "video",101);
-                    break;
+            switch (v.getId()){
                 case R.id.cardLayout:
                     if(cardLayout.getVisibility() == View.VISIBLE){
                         cardLayout.setVisibility(View.GONE);
@@ -145,7 +192,9 @@ public class WritePostActivity extends BasicActivity {
     private void storageUpload() {
 
         final String title = ((EditText) findViewById(R.id.writePostTitleEd)).getText().toString();
-        if (title.trim().length() > 0) {
+        final String contentOne = ((EditText)findViewById(R.id.contentEd)).getText().toString();
+        hideKeyBoard(new EditText[]{((EditText) findViewById(R.id.writePostTitleEd)),((EditText) findViewById(R.id.contentEd))});
+        if (title.trim().length() > 0 && contentOne.trim().length()>0) {
             loaderLayout.setVisibility(View.VISIBLE);
             activityWriteLayout.setEnabled(false);
             FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -284,7 +333,11 @@ public class WritePostActivity extends BasicActivity {
                 storeUpload(documentReference, postInfos);
             }
         } else {
-            startingToast("회원 정보를 입력 해주세요");
+            if(title.trim().length()<=0){
+                Snackbar.make(((EditText) findViewById(R.id.writePostTitleEd)),"제목을 입력 해 주세요", BaseTransientBottomBar.LENGTH_SHORT).show();
+            }else{
+                Snackbar.make(((EditText) findViewById(R.id.contentEd)),"내용을 입력 해 주세요", BaseTransientBottomBar.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -341,6 +394,7 @@ public class WritePostActivity extends BasicActivity {
                     imageView.setLayoutParams(layoutParams);
                     WritePostImageViewTag writePostImageViewTag = new WritePostImageViewTag(pathList.size(),profilePath);
                     imageView.setTag(writePostImageViewTag);
+                    imageView.setPadding(0,50,0,0);
                     pathList.add(profilePath);
                     imageView.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -392,7 +446,6 @@ public class WritePostActivity extends BasicActivity {
     }
 
     private void updateInit(){
-        ((Button)findViewById(R.id.checkBtn)).setText("수정");
         ((EditText)findViewById(R.id.writePostTitleEd)).setText(postInfo.getTitle());
         ArrayList<String> contents = (ArrayList<String>) postInfo.getContents();
         ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -494,5 +547,103 @@ public class WritePostActivity extends BasicActivity {
             }
         });
     }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case IMAGE_PERMISSION_REQUST_CODE :
+                if(ActivityCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.READ_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED){
+                    startActiNoFinish(GalleryActivity.class, "image",101);
+                }else{
+                    startingToast("어플 사용중 일부 서비스가 제한 됩니디.\n(어플 정보->권한 에서 설정 변경이 가능합니다.)");
+                }
+                break;
+            case VIDEO_PERMISSION_REQUST_CODE :
+                if(ActivityCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.READ_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED){
+                    startActiNoFinish(GalleryActivity.class, "video",101);
+                }else{
+                    startingToast("어플 사용중 일부 서비스가 제한 됩니디.\n(어플 정보->권한 에서 설정 변경이 가능합니다.)");
+                }
+                break;
+        }
+    }
+
+    private void checkPermission(String media){
+        if (ContextCompat.checkSelfPermission(
+                getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // You can use the API that requires the permission.
+            switch (media){
+                case "image" :if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, IMAGE_PERMISSION_REQUST_CODE);
+                }
+                break;
+                case "video": if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, VIDEO_PERMISSION_REQUST_CODE);
+                }
+                break;
+            }
+        }else{
+            startActiNoFinish(GalleryActivity.class, media,101);
+        }
+    }
+
+
+    View.OnClickListener toolbarOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            storageUpload();
+        }
+    };
+
+    private void addToolBarView(){
+        ImageView toolbarCheckImageView = new ImageView(getApplicationContext());
+        LinearLayout.LayoutParams toolbarLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        toolbarLayoutParams.gravity = Gravity.RIGHT;
+        toolbarLayoutParams.rightMargin = 25;
+        toolbarCheckImageView.setLayoutParams(toolbarLayoutParams);
+        toolbarCheckImageView.setImageResource(R.drawable.ic_baseline_check_circle_24);
+        LinearLayout toolbarLayout = findViewById(R.id.toolbar_menu_lay);
+        toolbarCheckImageView.setOnClickListener(toolbarOnClickListener);
+        toolbarLayout.addView(toolbarCheckImageView);
+
+    }
+
+
+    private void toggleFab() {
+
+        if (isFabOpen) {
+
+            addContentFab.setImageResource(R.drawable.ic_baseline_add_24);
+
+            imageFab.startAnimation(fabClose);
+
+            videoFab.startAnimation(fabClose);
+
+            imageFab.setClickable(false);
+
+            videoFab.setClickable(false);
+
+            isFabOpen = false;
+
+        } else {
+
+            addContentFab.setImageResource(R.drawable.ic_baseline_close_24);
+
+            imageFab.startAnimation(fabOpen);
+
+            videoFab.startAnimation(fabOpen);
+
+            imageFab.setClickable(true);
+
+            videoFab.setClickable(true);
+
+            isFabOpen = true;
+
+        }
+
+    }
+
 
 }

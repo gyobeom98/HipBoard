@@ -13,12 +13,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.gyobeom29.hipboard.R;
+import com.gyobeom29.hipboard.activity.GalleryActivity;
+import com.gyobeom29.hipboard.activity.MemberInitActivity;
 
 import java.util.ArrayList;
 
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.GalleryViewHolder> {
 private ArrayList<String> mDataset;
 private Activity activity;
+
 // Provide a reference to the views for each data item
 // Complex data items may need more than one view per item, and
 // you provide access to all the views for a data item in a view holder
@@ -46,22 +49,12 @@ public static class GalleryViewHolder extends RecyclerView.ViewHolder {
                 .inflate(R.layout.item_gallery, parent, false);
         final GalleryViewHolder galleryViewHolder = new GalleryViewHolder(cardView);
 
-        cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.putExtra("profilePath",mDataset.get(galleryViewHolder.getAdapterPosition()));
-                activity.setResult(Activity.RESULT_OK,intent);
-                activity.finish();
-            }
-        });
-
         return galleryViewHolder;
     }
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
-    public void onBindViewHolder(final GalleryViewHolder holder, int position) {
+    public void onBindViewHolder(final GalleryViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         CardView cardView = holder.cardView;
@@ -69,7 +62,23 @@ public static class GalleryViewHolder extends RecyclerView.ViewHolder {
 
         String profilePath = mDataset.get(position);
         Log.e("로그 : ","profilePath : " + profilePath);
+
         Glide.with(activity).load(profilePath).centerCrop().override(500).into(imageView);
+
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                Log.i("GalleryAdapter","갤러리 아답터 까지 옴");
+                Log.i("GalleryAdapter","갤러리 아이템 : " + mDataset.get(position));
+                intent.putExtra("profilePath",mDataset.get(position));
+                Log.i("GalleryAdapter","activityName : " + activity.getClass().getName());
+                activity.setResult(Activity.RESULT_OK,intent);
+
+                activity.finish();
+
+            }
+        });
 
 
     }

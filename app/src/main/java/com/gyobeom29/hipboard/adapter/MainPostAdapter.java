@@ -1,20 +1,23 @@
 package com.gyobeom29.hipboard.adapter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -47,15 +50,18 @@ public class MainPostAdapter extends RecyclerView.Adapter<MainPostAdapter.Galler
     private ArrayList<PostInfo> postInfoList;
     private Activity activity;
     private ArrayList<ImageView> likeImageViewList;
+    private TextView moreImageTextView;
+    private int moreImageCount;
+
     // Provide a reference to the views for each data item
 // Complex data items may need more than one view per item, and
 // you provide access to all the views for a data item in a view holder
     public static class GalleryViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
-        public CardView cardView;
-        public GalleryViewHolder(CardView v) {
+        public LinearLayout listLayout;
+        public GalleryViewHolder(LinearLayout v) {
             super(v);
-            cardView = v;
+            listLayout = v;
         }
     }
 
@@ -64,6 +70,8 @@ public class MainPostAdapter extends RecyclerView.Adapter<MainPostAdapter.Galler
         postInfoList = myDataset;
         this.activity = activity;
         likeImageViewList = new ArrayList<>();
+        moreImageTextView = null;
+        moreImageCount = 0;
     }
 
     // Create new views (invoked by the layout manager)
@@ -71,11 +79,11 @@ public class MainPostAdapter extends RecyclerView.Adapter<MainPostAdapter.Galler
     public MainPostAdapter.GalleryViewHolder onCreateViewHolder(ViewGroup parent,
                                                                 int viewType) {
         // create a new view
-        CardView cardView = (CardView) LayoutInflater.from(parent.getContext())
+        LinearLayout listLayout = (LinearLayout) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_post, parent, false);
-        final GalleryViewHolder galleryViewHolder = new GalleryViewHolder(cardView);
+        final GalleryViewHolder galleryViewHolder = new GalleryViewHolder(listLayout);
 
-        cardView.setOnClickListener(new View.OnClickListener() {
+        listLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String documentId = postInfoList.get(galleryViewHolder.getAdapterPosition()).getDocumentId();
@@ -91,76 +99,77 @@ public class MainPostAdapter extends RecyclerView.Adapter<MainPostAdapter.Galler
     }
 
     // Replace the contents of a view (invoked by the layout manager)
+    @SuppressLint("ResourceAsColor")
     @Override
     public void onBindViewHolder(final GalleryViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        CardView cardView = holder.cardView;
-        TextView titleTextView = cardView.findViewById(R.id.item_post_textView);
-        titleTextView.setText(postInfoList.get(position).getTitle());
+        Log.i("MainAdap","여기 옴");
 
-        TextView createAtTextview = cardView.findViewById(R.id.post_date_textView);
-        createAtTextview.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(postInfoList.get(position).getCreateAt()));
-        ImageView likeImageView = cardView.findViewById(R.id.likeImageView);
+        LinearLayout listLayout = holder.listLayout;
+        TextView titleTextView = listLayout.findViewById(R.id.item_post_textView);
+        if(titleTextView.getText()==null || titleTextView.getText().toString().length()<=0){
+            titleTextView.setText(postInfoList.get(position).getTitle());
+        }
+        TextView createAtTextview = listLayout.findViewById(R.id.post_date_textView);
+        if(createAtTextview.getText()==null || createAtTextview.getText().toString().length()<=0){
+            createAtTextview.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(postInfoList.get(position).getCreateAt()));
+        }
+        ImageView likeImageView = listLayout.findViewById(R.id.likeImageView);
         likeImageView.setContentDescription("test"+position);
         likeImageViewList.add(likeImageView);
 
-        setting(position);
-        setLikeImageVewSelect(postInfoList.get(position).getDocumentId(),position);
-
-        LinearLayout contentsLayout = cardView.findViewById(R.id.post_contents_layout);
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        ArrayList<String> contentList = (ArrayList<String>) postInfoList.get(position).getContents();
-        TextView viewsTextView = cardView.findViewById(R.id.viewsTextView);
-        TextView likeCountTextView = cardView.findViewById(R.id.likeCountTextView);
-        viewsTextView.setText("조회수 : " + postInfoList.get(position).getViews());
+        TextView viewsTextView = listLayout.findViewById(R.id.viewsTextView);
+        TextView likeCountTextView = listLayout.findViewById(R.id.likeCountTextView);
+        viewsTextView.setText(""+postInfoList.get(position).getViews());
         likeCountTextView.setText("" + postInfoList.get(position).getLikeCount());
 
-        for(int i = 0; i < contentList.size();i++){
-            if(i<3){
+        TextView publisherNameTextView = listLayout.findViewById(R.id.post_item_publisher_name_text_view);
+        publisherNameTextView.setText(postInfoList.get(position).getPublisherName());
+
+        setLikeImageVewSelect(postInfoList.get(position).getDocumentId(),position);
+
+        ArrayList<String> contentList = (ArrayList<String>) postInfoList.get(position).getContents();
+        RelativeLayout imageCountLayout = listLayout.findViewById(R.id.image_count_layout);
+
+        TextView contentTextView = listLayout.findViewById(R.id.post_item_content_text_view);
+        contentTextView.setText(contentList.get(0));
+        if(contentList.size()>1){
+            for(int i = 1; i< contentList.size(); i++){
                 String content = contentList.get(i);
                 if(Patterns.WEB_URL.matcher(content).matches()){
+                    if(CheckImageVideo.isVideo(content) || CheckImageVideo.isImage(content)){
+                        if(moreImageTextView == null){
+                            imageCountLayout.removeAllViewsInLayout();
+                            imageCountLayout.setBackgroundColor(R.color.colorBackTwo);
+                            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                            layoutParams.gravity = Gravity.CENTER_VERTICAL|Gravity.CENTER_HORIZONTAL;
+                            moreImageTextView = new TextView(activity.getApplicationContext());
+                            moreImageTextView.setTextColor(Color.WHITE);
+                            moreImageTextView.setLayoutParams(layoutParams);
 
-                    if(CheckImageVideo.isVideo(content)){
-                        final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(activity);
-                        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(activity,
-                                Util.getUserAgent(activity, "yourApplicationName"));
+                            moreImageTextView.setGravity(View.TEXT_ALIGNMENT_CENTER);
 
-                        // This is the MediaSource representing the media to be played.
-                        MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                                .createMediaSource(Uri.parse(content));
+                            moreImageTextView.setText("More\n");
+                            moreImageTextView.append(moreImageCount+"");
 
-                        // Prepare the player with the source.
-                        player.prepare(videoSource);
-                        final PlayerView playerView = getPlayerView();
-                        playerView.setPlayer(player);
-                        player.addVideoListener(new VideoListener() {
-                            @Override
-                            public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-                                playerView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,height));
+                            if(moreImageCount>0){
+                                moreImageTextView.append("+");
                             }
-                        });
-                        contentsLayout.addView(playerView);
-                    }else {
-                        ImageView contentImageView = new ImageView(activity);
-                        contentImageView.setLayoutParams(layoutParams);
-                        contentImageView.setAdjustViewBounds(true);
-                        contentImageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                        contentsLayout.addView(contentImageView);
-                        Glide.with(activity).load(content).override(1000).thumbnail(0.1f).into(contentImageView);
-                    }
-                }else {
-                    if (content.length() > 0) {
-                        TextView contentTextView = new TextView(activity);
-                        contentTextView.setLayoutParams(layoutParams);
-                        contentTextView.setPadding(10,10,10,100);
-                        contentsLayout.addView(contentTextView);
-                        contentTextView.setText(content);
-
+                            imageCountLayout.addView(moreImageTextView);
+                        }else{
+                            moreImageTextView.setText("More\n");
+                            moreImageTextView.append(moreImageCount+ "");
+                            if(moreImageCount>0){
+                                moreImageTextView.append("+");
+                            }
+                        }
+                        moreImageCount++;
                     }
                 }
             }
         }
+
 
     }
 

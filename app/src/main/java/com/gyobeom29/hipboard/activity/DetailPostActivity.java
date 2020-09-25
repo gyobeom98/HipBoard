@@ -134,9 +134,13 @@ public class DetailPostActivity extends BasicActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setNavigation(this.getClass());
+    }
 
     private void init(){
-        setNavigation();
 
         likeImageView = findViewById(R.id.detail_post_likeImageView);
         commentLayout = findViewById(R.id.comment_layout);
@@ -172,7 +176,7 @@ public class DetailPostActivity extends BasicActivity {
                     break;
                 case R.id.detail_post_likeImageView :
                     if(likeImageView.isSelected()){
-                    likeImageView.setSelected(false);
+                        likeImageView.setSelected(false);
                     }else{
                         likeImageView.setSelected(true);
                     }
@@ -545,10 +549,10 @@ public class DetailPostActivity extends BasicActivity {
         FirebaseFirestore.getInstance().collection("users").document(user.getUid()).collection("likePost").document(documentId).set(data).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                    if(task.isSuccessful()){
-                        writeLog("성공 !");
-                        likeCountUp();
-                    }
+                if(task.isSuccessful()){
+                    writeLog("성공 !");
+                    likeCountUp();
+                }
             }
         });
     }
@@ -611,7 +615,7 @@ public class DetailPostActivity extends BasicActivity {
 
                 if(documentSnapshot.exists()){
                     if(documentSnapshot.getBoolean("isLike") != null){
-                       likeImageView.setSelected(documentSnapshot.getBoolean("isLike"));
+                        likeImageView.setSelected(documentSnapshot.getBoolean("isLike"));
                     }
                 }
 

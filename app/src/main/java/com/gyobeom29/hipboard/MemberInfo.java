@@ -1,6 +1,9 @@
 package com.gyobeom29.hipboard;
 
-public class MemberInfo {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class MemberInfo implements Parcelable {
 
     private String name;
 
@@ -27,6 +30,40 @@ public class MemberInfo {
         this.address = address;
     }
 
+
+    protected MemberInfo(Parcel in) {
+        name = in.readString();
+        phone = in.readString();
+        birth = in.readString();
+        address = in.readString();
+        photoUrl = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(phone);
+        dest.writeString(birth);
+        dest.writeString(address);
+        dest.writeString(photoUrl);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<MemberInfo> CREATOR = new Creator<MemberInfo>() {
+        @Override
+        public MemberInfo createFromParcel(Parcel in) {
+            return new MemberInfo(in);
+        }
+
+        @Override
+        public MemberInfo[] newArray(int size) {
+            return new MemberInfo[size];
+        }
+    };
 
     public void setName(String name){
         this.name = name;

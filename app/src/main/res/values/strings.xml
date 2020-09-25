@@ -10,8 +10,10 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
-    <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
+    <string name="nav_menu_ac_title">Home</string>
+    <string name="nav_add_post_item_title">Add Post</string>
+    <string name="nav_post_list_item">Post List</string>
+    <string name="nav_news_list_item">News List</string>
+
 
 </resources>

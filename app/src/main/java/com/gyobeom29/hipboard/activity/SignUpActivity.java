@@ -1,34 +1,38 @@
 package com.gyobeom29.hipboard.activity;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.gyobeom29.hipboard.R;
-
-import java.util.regex.Pattern;
 
 public class SignUpActivity extends NoActiveBasicActivity {
 
     private static final String TAG = "SignUpActivity";
 
+    public static Activity instance;
+
     FirebaseAuth mAuth;
 
     RelativeLayout loaderLayout;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,8 @@ public class SignUpActivity extends NoActiveBasicActivity {
         setContentView(R.layout.activity_sign_up);
 
         mAuth = FirebaseAuth.getInstance();
+
+        instance = this;
 
         setActionBarTitle("회원가입");
 
@@ -50,9 +56,12 @@ public class SignUpActivity extends NoActiveBasicActivity {
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.signUpButton :
+                    hideKeyBoard();
                     signup();
+
                     break;
                 case R.id.go_to_loginBtn:
+                    hideKeyBoard();
                     startNoFinishActivity(LoginActivity.class);
                     break;
             }
@@ -75,42 +84,51 @@ public class SignUpActivity extends NoActiveBasicActivity {
                                     loaderLayout.setVisibility(View.GONE);
                                     if (task.isSuccessful()) {
                                         // Sign in success, update UI with the signed-in user's information
-                                        startingToast("회원가입을 성공 했습니다.");
+                                        startingSnackBar("회원 가입을 성공 하셨습니다.");
                                         Log.d(TAG, "createUserWithEmail:success");
                                         Log.i(TAG,mAuth.getUid());
-                                        
                                         mAuth.signOut();
                                         ((EditText) findViewById(R.id.passwordCheckEditText)).setText("");
                                         ((EditText) findViewById(R.id.passwordEditText)).setText("");
                                         ((EditText) findViewById(R.id.emailEditText)).setText("");
+                                        startNoFinishActivity(LoginActivity.class);
 
 //                            updateUI(user);
                                     } else {
                                         // If sign in fails, display a message to the user.
                                         if (task.getException() != null)
-                                            startingToast(task.getException().toString());
+                                            startingSnackBar(task.getException().toString());
                                     }
 
                                     // ...
                                 }
                             });
 //                } else {
-//                    startingToast("비밀번호가 일치 하지 않거나 규칙에 맞지 않는 비밀번호 입니다.");
+//                    startingSnackBar("비밀번호가 일치 하지 않거나 규칙에 맞지 않는 비밀번호 입니다.");
 //                    writeLog(password);
 //                    writeLog(passwordCheck);
 //
 //                }
             }else{
-                startingToast("이메일을 다시 확인 해주세요");
+                startingSnackBar("이메일을 다시 확인 하여 주세요");
             }
         } else {
-            startingToast("입력하지 않은 값이 있습니다. \n이메일 또는 비밀번호를 입력 해주세요.");
+
+            if(email.length()<=0){
+                startingSnackBar("이메일을 입력하지 않았습니다. \n 이메일을 입력 해주세요");
+                ((EditText)findViewById(R.id.emailEditText)).requestFocus();
+            }else if(password.length()<=0){
+                startingSnackBar("비밀번호를 입력하지 않았습니다. \n 비밀번호를 입력 해주세요");
+                ((EditText)findViewById(R.id.passwordEditText)).requestFocus();
+            }else if(passwordCheck.length()<=0){
+                startingSnackBar("비밀번호 확인이 되지 않았습니다.\n 비밀번호를 다시 확인 해주세요");
+                ((EditText)findViewById(R.id.passwordCheckEditText)).requestFocus();
+            }
+
+
         }
     }
 
-    private void startingToast(String msg){
-        Toast.makeText(getApplicationContext(),msg, Toast.LENGTH_SHORT).show();
-    }
 
     private void startNoFinishActivity(Class c){
         Intent intent = new Intent(SignUpActivity.this, c);
@@ -129,4 +147,20 @@ public class SignUpActivity extends NoActiveBasicActivity {
     private void writeLog(String msg){
         Log.i(TAG,msg);
     }
+
+    private void startingSnackBar(String msg){
+        Snackbar.make((Button)findViewById(R.id.signUpButton),msg, BaseTransientBottomBar.LENGTH_SHORT).show();
+    }
+
+    private void hideKeyBoard(){
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if(((EditText) findViewById(R.id.passwordCheckEditText)).isFocused()){
+            imm.hideSoftInputFromWindow(((EditText)findViewById(R.id.passwordCheckEditText)).getWindowToken(), 0);
+        }else if(((EditText) findViewById(R.id.passwordEditText)).isFocused()){
+            imm.hideSoftInputFromWindow(((EditText)findViewById(R.id.passwordEditText)).getWindowToken(), 0);
+        }else if(((EditText) findViewById(R.id.emailEditText)).isFocused()){
+            imm.hideSoftInputFromWindow(((EditText)findViewById(R.id.emailEditText)).getWindowToken(), 0);
+        }
+    }
+
 }

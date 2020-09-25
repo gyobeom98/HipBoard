@@ -9,10 +9,6 @@
     android:id="@+id/drawerLayout"
     tools:context=".activity.UserInfoActivity">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,32 +26,17 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/colorToolbar"
-        android:paddingLeft="20dp"
         android:paddingTop="30dp"
-        android:paddingRight="10dp"
         android:paddingBottom="20dp"
         >
+
 
         <LinearLayout
             android:id="@+id/innerHoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <androidx.cardview.widget.CardView
-                android:layout_gravity="center"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                app:cardCornerRadius="100dp">
-
-                <ImageView
-                    android:id="@+id/myPageProfileImageView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
-                    tools:srcCompat="@tools:sample/avatars" />
-
-            </androidx.cardview.widget.CardView>
+            android:orientation="vertical"
+            >
 
             <TextView
                 android:layout_width="match_parent"
@@ -65,57 +46,318 @@
                 android:textColor="@color/colorWhite"
                 android:textStyle="bold"
                 android:text="진교범"
-                android:gravity="right"
+                android:gravity="center"
                 android:layout_gravity="bottom"
                 android:paddingRight="5dp"
                 />
 
+            <androidx.cardview.widget.CardView
+                android:layout_gravity="center"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                app:cardCornerRadius="100dp"
+                android:layout_marginTop="15dp"
+                app:cardBackgroundColor="@color/colorFavorite"
+                >
+                <androidx.cardview.widget.CardView
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    app:cardCornerRadius="100dp"
+                    android:layout_gravity="center"
+                    >
+
+                <ImageView
+                    android:id="@+id/myPageProfileImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:adjustViewBounds="true"
+                    />
+                </androidx.cardview.widget.CardView>
+
+            </androidx.cardview.widget.CardView>
+
+
 
         </LinearLayout>
 
-
-
-    </LinearLayout>
-
-
-            <TextView
-                android:gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/myPageUserPhone"
-                android:textSize="24sp"
-                android:layout_weight="2"
-                />
-
-            <TextView
-                android:gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/myPageUserBirth"
-                android:textSize="24sp"
-                android:layout_weight="2"
-                />
-
-            <TextView
-                android:gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/myPageUserAddress"
-                android:textSize="24sp"
-                android:layout_weight="2"
-                />
 
         <LinearLayout
-            android:id="@+id/innerPostLayout"
+            android:layout_marginTop="15dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:background="@drawable/profile_count_layout_shape"
+            >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1"
+                android:paddingBottom="5dp"
+                >
+
+            <TextView
+                android:id="@+id/my_posts_count_textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorFavorite"
+                android:textSize="20sp"
+                android:gravity="center"
+                />
+
+             <TextView
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 android:textColor="@color/colorFavorite"
+                 android:text="MyPosts"
+                 android:gravity="center"
+                 />
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1"
+                android:paddingBottom="5dp"
+                >
+
+                <TextView
+                    android:id="@+id/my_like_posts_count_textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorFavorite"
+                    android:textSize="20sp"
+                    android:gravity="center"
+                    />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/colorFavorite"
+                    android:text="Like Post"
+                    android:gravity="center"
+                    />
+
+            </LinearLayout>
+
 
         </LinearLayout>
+        
+        
 
     </LinearLayout>
 
-    </ScrollView>
+        <TextView
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My List"
+            android:textSize="16sp"
+            />
+
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+        <GridLayout
+            android:id="@+id/go_to_my_post_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:rowCount="1"
+            android:columnCount="3"
+            android:padding="15dp"
+            android:background="@drawable/list_layout_shape"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_baseline_note_add_24"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="내가 쓴 게시글"
+                android:textSize="18sp"
+                android:layout_marginLeft="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_baseline_chevron_right_24"
+                android:layout_gravity="right"
+                />
+
+        </GridLayout>
+
+
+            <GridLayout
+                android:id="@+id/go_to_my_like_post_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:rowCount="1"
+                android:columnCount="3"
+                android:padding="15dp"
+                android:background="@drawable/list_layout_shape"
+                >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_playlist_add_check_24"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="내가 좋아요 한 게시글"
+                    android:textSize="18sp"
+                    android:layout_marginLeft="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_chevron_right_24"
+                    android:layout_gravity="right"
+                    />
+
+
+            </GridLayout>
+
+
+
+            <GridLayout
+                android:id="@+id/go_to_update_my_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:rowCount="1"
+                android:columnCount="3"
+                android:padding="15dp"
+                android:background="@drawable/list_layout_shape"
+                >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_assignment_ind_24"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="회원 정보 수정"
+                    android:textSize="18sp"
+                    android:layout_marginLeft="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_chevron_right_24"
+                    android:layout_gravity="right"
+                    />
+
+
+            </GridLayout>
+
+            <GridLayout
+                android:id="@+id/go_to_delete_user"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:rowCount="1"
+                android:columnCount="3"
+                android:padding="15dp"
+                android:background="@drawable/list_layout_shape"
+                >
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_people_outline_24"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="계정 탈퇴"
+                    android:textSize="18sp"
+                    android:layout_marginLeft="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_baseline_chevron_right_24"
+                    android:layout_gravity="right"
+                    />
+
+            </GridLayout>
+
+
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="5dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Push"
+            android:textSize="16sp"
+            />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:rowCount="1"
+            android:columnCount="2"
+            android:padding="15dp"
+            android:background="@drawable/list_layout_shape"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_baseline_notifications_active_24"
+                android:layout_gravity="center_vertical"
+                />
+
+            <Switch
+                android:layout_margin="15dp"
+                android:id="@+id/switch_push"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:switchPadding="25dp"
+                android:text="Push 알람 설정" />
+
+        </GridLayout>
+
+
+
+
+
+
+
+    </LinearLayout>
 
 
 
@@ -126,6 +368,9 @@
         android:layout_gravity="start"
         android:fitsSystemWindows="false"
         app:headerLayout="@layout/navigation_header_layout"
+        app:menu="@menu/navigation_menu"
+        app:itemTextColor="@drawable/nav_menu_item_color"
+        app:itemIconTint="@drawable/nav_menu_item_color"
         />
 
 </androidx.drawerlayout.widget.DrawerLayout>

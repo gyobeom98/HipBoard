@@ -2,8 +2,12 @@ package com.gyobeom29.hipboard.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -30,20 +34,15 @@ public class PasswordResetActivity extends NoActiveBasicActivity {
         mAuth = FirebaseAuth.getInstance();
         setActionBarTitle("비밀번호 재설정");
 
-        findViewById(R.id.passwordResetBtn).setOnClickListener(onClickListener);
         loaderLayout = findViewById(R.id.loaderLayout);
-
+        showHome();
+        addToolBarView();
     }
 
     View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.passwordResetBtn :
-                    send();
-                    break;
-
-            }
+            send();
         }
     };
 
@@ -76,6 +75,21 @@ public class PasswordResetActivity extends NoActiveBasicActivity {
         Intent intent = new Intent(PasswordResetActivity.this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
+    }
+
+
+
+    private void addToolBarView(){
+
+        ImageView toolbarCheckImageView = new ImageView(getApplicationContext());
+        LinearLayout.LayoutParams toolbarLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        toolbarLayoutParams.gravity = Gravity.RIGHT;
+        toolbarLayoutParams.rightMargin = 25;
+        toolbarCheckImageView.setLayoutParams(toolbarLayoutParams);
+        toolbarCheckImageView.setImageResource(R.drawable.ic_baseline_check_circle_24);
+        LinearLayout toolbarLayout = findViewById(R.id.toolbar_menu_lay);
+        toolbarCheckImageView.setOnClickListener(onClickListener);
+        toolbarLayout.addView(toolbarCheckImageView);
     }
 
 

@@ -2,74 +2,158 @@
 <androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorWhite"
     android:fitsSystemWindows="true"
-    tools:openDrawer="start"
-    android:id="@+id/drawerLayout"
-    tools:context=".activity.MainActivity">
+    tools:context=".activity.MainActivity"
+    tools:openDrawer="start">
 
-    <RelativeLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <include
-        layout="@layout/view_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_below="@+id/toolbar"
-        android:id="@+id/mainRecyclerView"
-        android:background="@color/colorGreenGray"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+            <include
+                layout="@layout/view_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
 
-    <Button
-        android:id="@+id/member_in_it_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="148dp"
-        android:text="go to member_in_it"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="39dp" />
+            <LinearLayout
+                android:id="@+id/youtube_thumbNailLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/main_division_line"
+                android:orientation="vertical">
+
+                <androidx.viewpager.widget.ViewPager
+                    android:id="@+id/youtubeImageViewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp">
+
+                    <com.google.android.material.tabs.TabLayout
+                        android:id="@+id/youtube_tab_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="25dp"
+                        android:layout_gravity="bottom"
+                        app:tabBackground="@drawable/tab_selector"
+                        app:tabGravity="center"
+                        app:tabIndicatorGravity="bottom"
+                        app:tabIndicatorHeight="0dp" />
+
+                </androidx.viewpager.widget.ViewPager>
 
 
-    <Button
-        android:id="@+id/userInfo_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="80dp"
-        android:layout_marginLeft="80dp"
-        android:layout_marginTop="225dp"
-        android:text="유저 정보" />
+            </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/mainFloatBtn"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="51dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="47dp"
-        android:clickable="true"
-        app:srcCompat="@drawable/ic_baseline_add_24" />
-    </RelativeLayout>
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="false"
-        app:headerLayout="@layout/navigation_header_layout"
-        />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/main_division_line"
+                    android:paddingBottom="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="5dp"
+                        android:text="News"
+                        android:gravity="center"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/news_list_more_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="More"
+                        android:textColor="@color/colorTextGray"
+                        android:layout_alignParentRight="true"
+                        android:paddingRight="5dp"
+
+                        android:visibility="gone" />
+
+
+                </RelativeLayout>
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/news_recycler_view"
+                    android:paddingTop="10dp"
+                    />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/main_division_line_two"
+                    >
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:paddingLeft="5dp"
+                        android:text="Contents"
+                        android:gravity="center"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/list_more_textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="More"
+                        android:layout_centerVertical="true"
+                        android:textColor="@color/colorTextGray"
+                        android:layout_alignParentRight="true"
+                        android:paddingRight="5dp"
+                        />
+
+                </RelativeLayout>
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/mainRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/youtube_thumbNailLayout"
+                    />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/nav_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="false"
+            app:headerLayout="@layout/navigation_header_layout"
+            app:menu="@menu/navigation_menu"
+            app:itemTextColor="@drawable/nav_menu_item_color"
+            app:itemIconTint="@drawable/nav_menu_item_color"
+            />
 
 
 </androidx.drawerlayout.widget.DrawerLayout>
