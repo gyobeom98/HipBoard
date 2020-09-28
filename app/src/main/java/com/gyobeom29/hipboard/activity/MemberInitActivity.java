@@ -79,7 +79,6 @@ public class MemberInitActivity extends NoActiveBasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_member_init);
-        startingToast("memeber init create()");
 
         setActionBarTitle("회원 정보");
 
