@@ -53,7 +53,6 @@
                     android:layout_weight="1"
                     android:maxLength="17"
                     android:paddingLeft="15dp"
-                    android:text="test"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
@@ -94,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textSize="12sp"
-                    android:text="test" />
+                    android:text="" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -108,7 +107,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="15dp"
                     android:textSize="12sp"
-                    android:text="2020-09-23" />
+                    android:text="" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -121,7 +120,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:text="15" />
+                    android:text="" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -134,7 +133,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:text="15" />
+                    android:text="" />
 
             </LinearLayout>
 
